@@ -9,12 +9,8 @@ namespace Alertnity
 {
     public class CrimeInfo
     {
-        public DateTime Timestamp { get; set; }
+        public DateTime DateAccessed { get; set; }
         public DateTime ReportedDate { get; set; }
-        public double Longitude { get; set; }
-        public double Latitude { get; set; }
-        public string StreetName { get; set; }
-        public string Postcode { get; set; }
         public CrimeCategory Category { get; set; }
         public string CrimeOutcome { get; set; }
         public string CrimeDescription { get; set; }

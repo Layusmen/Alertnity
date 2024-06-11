@@ -8,7 +8,6 @@ namespace Alertnity
 {
     public enum ReportingParty
     {
-    /* Dummy data*/
         Victim,
         Witness,
         PoliceOfficer,
