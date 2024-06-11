@@ -1,5 +1,7 @@
 # Alertnity: Neighbourhood Guardian
 
+![Logod](https://github.com/Layusmen/Alertnity/assets/67705870/87dfeaaf-457a-4827-ad31-79e3a4bd176b)
+
 Welcome to **Alertnity**, the comprehensive platform designed to empower residents to share information, collaborate with local authorities, and enhance the safety of their neighbourhoods. This document provides an overview of the Alertnity system, its features, and guidelines for usage.
 
 ## Table of Contents
