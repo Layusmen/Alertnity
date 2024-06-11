@@ -11,5 +11,6 @@ namespace Alertnity
         public double Latitude { get; set; }
         public string StreetName { get; set; }
         public string Postcode { get; set; }
+        public string ApproximateLocation  { get; set; }
     }
 }
