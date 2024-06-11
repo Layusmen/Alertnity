@@ -15,7 +15,7 @@ namespace Alertnity
         public string PhoneNumber { get; set; }
         public string Postcode { get; set; }
         public string Email { get; set; }
-        public enum Permissions { get; set; }
+        public Permissions UserPermissions { get; set; }
         public DateTime DateCreated { get; set; }   
     }
 }

@@ -10,6 +10,5 @@ namespace Alertnity
     {
         public List<UserPost> Posts { get; set; }
 
-
     }
 }

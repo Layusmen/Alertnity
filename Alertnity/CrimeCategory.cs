@@ -14,5 +14,5 @@ namespace Alertnity
             Fraud,
             DrugOffense,
             Other
-        }
+    }
 }
