@@ -12,7 +12,6 @@ namespace Alertnity
         public int UserID { get; set; }
         public string UserName { get; set; }
         public string Title { get; set; }
-        public string Tag { get; set; }
         public string Content { get; set; }
         public string Postcode { get; set; }
         public DateTime Timestamp { get; set; }
