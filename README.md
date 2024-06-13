@@ -175,11 +175,10 @@ Welcome to **Alertnity**, the comprehensive platform designed to empower residen
 ## Technology Stack
 
 - **Frontend**:
-  - React.js or Vue.js for a responsive UI.
+  HTML, CSS, Javascript
   - Google Maps for mapping and visualizations.
 - **Backend**:
-  - Node.js with Express for API handling.
-  - MongoDB or PostgreSQL for data storage.
+  - C#, ASP.NET with API handling.
 - **APIs**:
   - RESTful APIs for data communication.
   - External APIs for crime data, geolocation, and more.
@@ -187,7 +186,7 @@ Welcome to **Alertnity**, the comprehensive platform designed to empower residen
   - Pattern recognition for crime data analysis.
 - **Notifications**:
   - Push notifications for alerts and updates.
-
+    
 ---
 
 ## APIs and Integrations
@@ -196,6 +195,8 @@ Welcome to **Alertnity**, the comprehensive platform designed to empower residen
 - **[Google Maps API](https://developers.google.com/maps/documentation)**: For geolocation and mapping.
 - **[UK Population API](https://www.nomisweb.co.uk/api/v01/help)**: For demographic data.
 - **[Ordinance Postcode API](https://www.api.gov.uk/nd/ordnance-survey-places-api/#ordnance-survey-places-api)**: For postcode data.
+- **[Postcode API](https://postcodes.io/docs)**: For postcode API.
+
 
 ---
 
@@ -215,16 +216,6 @@ Welcome to **Alertnity**, the comprehensive platform designed to empower residen
 - **Moderator**: Manage content and user interactions.
 - **Admin**: Oversee platform operations and user management.
 - **SuperAdmin**: Full system control.
-
----
-
-## Setup and Installation
-
-1. **Clone the Repository**: `git clone https://github.com/alertnity/alertnity.git`
-2. **Install Dependencies**: Navigate to the project directory and run `npm install`.
-3. **Set Environment Variables**: Configure API keys and database connections in `.env` file.
-4. **Run the Application**: Start the development server with `npm start`.
-5. **Access the Application**: Open your browser and go to `http://localhost:3000`.
 
 ---
 
