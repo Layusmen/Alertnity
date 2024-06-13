@@ -1,9 +1,5 @@
 ﻿using System.Collections.Generic;
 using System;
-using PoliceUk;
-using PoliceUk.Entities.StreetLevel;
-using PoliceUk.Entities.Force;
-using System.Text.Json;
 
 namespace Alertnity
 {
@@ -27,10 +23,31 @@ namespace Alertnity
             UserPrintMethods.PrintUserPost(userPost);
 
             //Crime Reporter
+            Console.WriteLine($"\nInformation about the reported crime:\n");
+            CrimeInfo crimeInfo = UserInputMethods.CheckCrimeInfo();
+            UserPrintMethods.PrintCrimeInfo(crimeInfo);
 
+            //Crime Address
+            Console.WriteLine($"\nInformation about the crime address:\n"); 
+            CrimeAddress crimeAddress =UserInputMethods.CheckCrimeAddress();
+            UserPrintMethods.PrintCrimeAddress(crimeAddress);
 
+            //Print Converted Postcode
+            Console.WriteLine($"\nInformation about the converted postcode:\n");
+            PostcodeConverter postcodeConverter = UserInputMethods.ConvertPostcodeToLongitudeAndLatitude(crimeAddress);
+            UserPrintMethods.PrintPostcodeInLongitudeAndLatitude(postcodeConverter);
 
-         
-    }
+            //Upvote Dummy Calculation
+            UpvoteDownvote vote = new UpvoteDownvote();
+
+            vote.Upvote();
+            vote.Upvote();
+            vote.Downvote();
+
+            Console.WriteLine("Upvotes: " + vote.Upvotes);
+            Console.WriteLine("Downvotes: " + vote.Downvotes);
+            Console.WriteLine("Total Score: " + vote.GetTotalScore());
+
+        }
     }
 }

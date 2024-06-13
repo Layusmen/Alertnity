@@ -1,5 +1,6 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
@@ -50,5 +51,33 @@ namespace Alertnity
             }
         }
 
+
+        public static void PrintCrimeInfo(CrimeInfo crimeInfo)
+        {
+            Console.WriteLine("ReportedDate: " + crimeInfo.ReportedDate);
+            Console.WriteLine("CrimeID: " + crimeInfo.CrimeID);
+            Console.WriteLine("CrimeCategory: " + crimeInfo.Category);
+            Console.WriteLine("CrimeOutcome " + crimeInfo.CrimeOutcome);
+            Console.WriteLine("CrimeDescription: " + crimeInfo.CrimeDescription);
+            Console.WriteLine("reportingParty: " + crimeInfo.Party);
+        }
+
+
+        public static void PrintCrimeAddress(CrimeAddress crimeAddress)
+        {
+            Console.WriteLine("Longitude: " + crimeAddress.Longitude);
+            Console.WriteLine("Latitude: " + crimeAddress.Latitude);    
+            Console.WriteLine("StreetName: " + crimeAddress.StreetName);
+            Console.WriteLine("Postcode: " + crimeAddress.Postcode);
+            Console.WriteLine("ApproximateLocation: " + crimeAddress.ApproximateLocation);
+        }
+
+        public static void PrintPostcodeInLongitudeAndLatitude(PostcodeConverter postcodeConverter)
+        {
+            Console.WriteLine("Postcode: " + postcodeConverter.Postcode);
+            Console.WriteLine("Longitude: " + postcodeConverter.Longitude);
+            Console.WriteLine("Latitude: " + postcodeConverter.Latitude);
+            
+        }
     }
 }
