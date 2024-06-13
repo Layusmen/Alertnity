@@ -37,7 +37,6 @@ namespace Alertnity
             foreach (var user in users)
             {
                 Console.WriteLine($"\nUser 1{1+i} General information:\n");
-
                 Console.WriteLine($"UserID: {user.UserID}");
                 Console.WriteLine($"UserName: {user.UserName}");
                 Console.WriteLine($"FirstName: {user.FirstName}");

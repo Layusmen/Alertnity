@@ -71,5 +71,18 @@ namespace Alertnity
 
             return multipleUserInfo;
         }
+        public static CrimeInfo CheckCrimeInfo()
+        {
+            CrimeInfo crimeinfo = new CrimeInfo()
+            {
+                ReportedDate = DateTime.Now.AddMinutes(1),
+                CrimeID = "01",
+                Category = CrimeCategory.Assault,
+                CrimeOutcome = "Charged",
+                CrimeDescription = "The accussed was found bougling houses",
+                Party = ReportingParty.Anonymous
+            };
+            return crimeinfo;
+        }
     }
 }
