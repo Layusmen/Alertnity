@@ -1,7 +1,4 @@
-﻿using System.Collections.Generic;
-using System;
-using System.Net.Http;
-using System.Data;
+﻿using System;
 
 namespace Alertnity
 {
@@ -49,12 +46,6 @@ namespace Alertnity
             Console.WriteLine("Upvotes: " + vote.Upvotes);
             Console.WriteLine("Downvotes: " + vote.Downvotes);
             Console.WriteLine("Total Score: " + vote.GetTotalScore());
-
-
-            
-           
-
-
         }
     }
 }
