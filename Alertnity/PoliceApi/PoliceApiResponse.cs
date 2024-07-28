@@ -5,11 +5,10 @@ using System.Text;
 using System.Threading.Tasks;
 using static Alertnity.Program;
 
-namespace Alertnity
+namespace Alertnity.PoliceApi
 {
-    public class PostcodeApiResponse
+    public class PoliceApiResponse
     {
-        public int Status { get; set; }
-        public Result[] Result { get; set; }
+        public List<Outcome> outcome { get; set; }
     }
 }

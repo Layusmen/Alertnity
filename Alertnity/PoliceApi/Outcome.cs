@@ -1,6 +1,13 @@
-﻿namespace Alertnity
+﻿using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+using static Alertnity.Program;
+
+namespace Alertnity.PoliceApi
 {
-    public class CrimeInfo
+    public class Outcome
     {
         public string category { get; set; }
         public string location_type { get; set; }

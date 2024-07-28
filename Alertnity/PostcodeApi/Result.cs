@@ -4,8 +4,9 @@ using System.Linq;
 using System.Reflection.Emit;
 using System.Text;
 using System.Threading.Tasks;
+using Alertnity.PoliceApi;
 
-namespace Alertnity
+namespace Alertnity.PostcodeApi
 {
     public class Result
     {
