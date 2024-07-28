@@ -75,6 +75,51 @@ namespace Alertnity
         }
 
 
+        public static List<CrimeInfo> ProcessCrimeIncidents(Outcome[] crimeIncidents)
+        {
+            List<CrimeInfo> crimeInfos = new List<CrimeInfo>();
+
+            if (crimeIncidents != null)
+            {
+                foreach (var crimeIncident in crimeIncidents)
+                {
+                    CrimeInfo crimeInfo = new CrimeInfo
+                    {
+                        category = crimeIncident.category,
+                        location = crimeIncident.location,
+                        outcome_status = crimeIncident.outcome_status,
+                        location_subtype = crimeIncident.location_subtype,
+                        persistent_id = crimeIncident.persistent_id,
+                        id = crimeIncident.id,
+                        location_type = crimeIncident.location_type,
+                        month = crimeIncident.month,
+
+                    };
+                    crimeInfos.Add(crimeInfo);
+                }
+
+                foreach (var crime in crimeInfos)
+                {
+                    Console.WriteLine($"Category: {crime.category}");
+                    Console.WriteLine($"Location Type: {crime.location?.street.Id}");
+                    Console.WriteLine($"Location:");
+                    Console.WriteLine($"\tLatitude: {crime.location?.latitude}");
+                    Console.WriteLine($"\tLongitude: {crime.location?.longitude}");
+                    Console.WriteLine($"\tStreet: {crime.location?.street.Name}");
+                    Console.WriteLine($"Outcome Status: {crime.outcome_status?.Category}");
+                    Console.WriteLine($"Month: {crime.outcome_status?.Month}");
+                    
+                    Console.WriteLine("------------------");
+                }
+            }
+            else
+            {
+                Console.WriteLine("Nothing found");
+            }
+
+            return crimeInfos;
+        }
+
     }
 
 }

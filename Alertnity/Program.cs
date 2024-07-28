@@ -5,6 +5,7 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using System.Security.Cryptography.X509Certificates;
+using System.IO;
 
 
 
@@ -21,13 +22,15 @@ namespace Alertnity
             string insertDate = Console.ReadLine();
 
             //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
-            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=20";
+            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=30";
             PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
 
             //Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
 
             List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
 
+            
+            
             //Now Insert the postcodeApiResponseValue into Police API
             //First convert the response
             string poly = ApiMethods.CreatePolyParameter(converters);
@@ -38,8 +41,9 @@ namespace Alertnity
 
 
             Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
-
-
+            
+            //Outputting crimeInfor
+            var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
 
             /*
             //Single User Information
@@ -85,5 +89,5 @@ namespace Alertnity
             */
 
         }
-}
+    }
 }

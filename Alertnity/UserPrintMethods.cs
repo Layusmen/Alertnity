@@ -44,14 +44,6 @@ namespace Alertnity
             }
         }
 
-        public static void PrintCrimeInfo(CrimeInfo crimeInfo)
-        {
-            Console.WriteLine("ReportedDate: " + crimeInfo.ReportedDate);
-            Console.WriteLine("CrimeID: " + crimeInfo.CrimeID);
-            Console.WriteLine("CrimeCategory: " + crimeInfo.Category);
-            Console.WriteLine("CrimeOutcome " + crimeInfo.CrimeOutcome);
-            Console.WriteLine("CrimeDescription: " + crimeInfo.CrimeDescription);
-            Console.WriteLine("reportingParty: " + crimeInfo.ReportingParty);
-        }  
+        
     }
 }

@@ -6,9 +6,9 @@ using System.Threading.Tasks;
 
 namespace Alertnity
 {
-    public class Outcome_Status
+    public class StreetName
     {
-        public string Category { get; set; }
-        public string Month { get; set; }
+        public int Id { get; set; }
+        public string Name { get; set; }
     }
 }

@@ -1,17 +1,15 @@
-﻿using System;
-
-
-namespace Alertnity
+﻿namespace Alertnity
 {
     public class CrimeInfo
     {
-        public DateTime? ReportedDate { get; set; }
-        public string Longitude { get; set; }
-        public string Latitude { get; set; }
-        public string Category { get; set; }
-        public string CrimeOutcome { get; set; }
-        public string? CrimeDescription { get; set; }
-        public string ReportingParty { get; set; }
-        public string? CrimeID { get; set; }
+        public string category { get; set; }
+        public string location_type { get; set; }
+        public Location location { get; set; }
+        public string context { get; set; }
+        public Outcome_Status outcome_status { get; set; }
+        public string persistent_id { get; set; }
+        public int id { get; set; }
+        public string location_subtype { get; set; }
+        public string month { get; set; }
     }
 }

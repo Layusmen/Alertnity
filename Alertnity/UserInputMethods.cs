@@ -67,22 +67,7 @@ namespace Alertnity
 
             return multipleUserInfo;
         }
-        public static CrimeInfo CheckCrimeInfo()
-        {
-            int reportedDateInt = 202310;
-            string reportedDateString = reportedDateInt.ToString("yyyyMM"); // Format as year and month
-
-            CrimeInfo crimeinfo = new CrimeInfo()
-            {
-                ReportedDate = DateTime.ParseExact(reportedDateString, "yyyyMM", CultureInfo.InvariantCulture),
-                CrimeID = "01",
-                Category = "Assault",
-                CrimeOutcome = "Charged",
-                CrimeDescription = "The accussed was found bougling houses",
-                ReportingParty = "Force"
-            };
-            return crimeinfo;
-        }
+        
         
     }
 }
