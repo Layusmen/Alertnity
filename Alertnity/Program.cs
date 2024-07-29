@@ -31,8 +31,7 @@ namespace Alertnity
 
             List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
 
-            
-            
+ 
             //Now Insert the postcodeApiResponseValue into Police API
             //First convert the response
             string poly = ApiMethods.CreatePolyParameter(converters);
@@ -44,7 +43,7 @@ namespace Alertnity
 
             Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
             
-            //Outputting crimeInfor
+            //Outputting crimeInformation for the postcodes
             var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
 
             /*
