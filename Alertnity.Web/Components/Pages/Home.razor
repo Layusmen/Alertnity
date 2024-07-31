@@ -1,7 +1,78 @@
 ﻿@page "/"
+@using Alertnity
+@using Alertnity.PoliceApi
+@using System.ComponentModel.DataAnnotations
+@using System.Globalization
 
-<PageTitle>Home</PageTitle>
+<h1 class="container align-items-center">Welcome to Alertnity! Check Your Community Crime Details</h1>
+<div class="container mt-5 d-flex align-items-center justify-content-center">
+    <EditForm Model=@FormInfo OnValidSubmit="FormSubmitted">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
+        <div class="mb-3">
+            <label for="postcode" class="form-label">Postcode</label>
+            <InputText @bind-Value="FormInfo.Postcode" id="postcode" class="form-control" />
+            <div class="form-text">We'll never share your postcode with anyone else.</div>
+        </div>
 
-<h1>Hello, world!</h1>
+        <div class="mb-3">
+            <label for="month" class="form-label">Month to check</label>
+            <InputText @bind-Value="FormInfo.DateString" id="month" class="form-control" />
+            <div id="monthHelp" class="form-text">Insert month in this format: YYYY-MM.</div>
+        </div>
 
-Welcome to your new app.
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
+</div>
+<h1>Results of Api Pull</h1>
+@if (results != null && results.Any())
+{
+    @foreach (var ci in results)
+    {
+        <div>@ci.id</div>
+        <div>@ci.category</div>
+        <div>@ci.outcome_status.Month</div>
+        <div>@ci.outcome_status.Category</div>
+        <div>@ci.context</div>
+        <div>@ci.location.latitude</div>
+        <div>@ci.location.longitude</div>
+        <div>@ci.location_subtype</div>
+        <div>@ci.persistent_id</div>
+        <div>@ci.location_type</div>
+        <div>@ci.month</div>
+    }
+}
+else
+{
+    <p>No results found.</p>
+}
+
+@code {
+    private CrimeCheckModel FormInfo = new CrimeCheckModel();
+    List<CrimeInfo> results = new();
+
+    public class CrimeCheckModel
+    {
+        [Required]
+        [StringLength(16, ErrorMessage = "Postcode too long (must be 16 character limit).")]
+        public string Postcode { get; set; }
+
+        [Required(ErrorMessage = "The date field is required.")]
+        [RegularExpression(@"^\d{4}-(0[1-9]|1[0-2])$", ErrorMessage = "Invalid date format. Use YYYY-MM.")]
+        public string DateString { get; set; }
+
+        [Required]
+        public DateTime Date
+        {
+            get
+            {
+                return DateTime.ParseExact(DateString, "yyyy-MM", CultureInfo.InvariantCulture);
+            }
+        }
+    }
+
+    public void FormSubmitted()
+    {
+        results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date);
+    }
+}

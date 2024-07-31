@@ -6,7 +6,7 @@ using Alertnity.PostcodeApi;
 
 namespace Alertnity
 {
-    internal class ApiMethods
+    public class ApiMethods
     {
         public static PostcodeApiResponse PostcodeApiReturnJson(string Url)
         {
@@ -122,6 +122,42 @@ namespace Alertnity
             return crimeInfos;
         }
 
+
+        public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime date)
+        {
+            //Console.WriteLine("Enter postcode:");
+            //string insertPostcode = Console.ReadLine();
+
+            //Console.WriteLine("Enter Date  int this format 2017-01:");
+            //string insertDate = Console.ReadLine();
+
+            //string insertDate = date.ToString();
+            string insertDate = date.ToString("yyyy-MM");
+            //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
+            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=30";
+            PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
+
+            //Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
+
+            List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
+
+
+            //Now Insert the postcodeApiResponseValue into Police API
+            //First convert the response
+            string poly = ApiMethods.CreatePolyParameter(converters);
+            //Insert the converted response into the API Url
+            Url = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={insertDate}";
+
+            Console.WriteLine(Url);
+
+
+            Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
+
+            //Outputting crimeInformation for the postcodes
+            var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
+
+            return processedCrimeInfo;
+        }
     }
 
 }

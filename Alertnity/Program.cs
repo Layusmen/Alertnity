@@ -17,34 +17,34 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
-            Console.WriteLine("Enter postcode:");
-            string insertPostcode = Console.ReadLine();
+            //Console.WriteLine("Enter postcode:");
+            //string insertPostcode = Console.ReadLine();
 
-            Console.WriteLine("Enter Date  int this format 2017-01:");
-            string insertDate = Console.ReadLine();
+            //Console.WriteLine("Enter Date  int this format 2017-01:");
+            //string insertDate = Console.ReadLine();
 
-            //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
-            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=30";
-            PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
+            ////Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
+            //var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=30";
+            //PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
 
-            //Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
+            ////Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
 
-            List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
+            //List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
 
  
-            //Now Insert the postcodeApiResponseValue into Police API
-            //First convert the response
-            string poly = ApiMethods.CreatePolyParameter(converters);
-            //Insert the converted response into the API Url
-            Url = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={insertDate}";
+            ////Now Insert the postcodeApiResponseValue into Police API
+            ////First convert the response
+            //string poly = ApiMethods.CreatePolyParameter(converters);
+            ////Insert the converted response into the API Url
+            //Url = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={insertDate}";
 
-            Console.WriteLine(Url);
+            //Console.WriteLine(Url);
 
 
-            Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
+            //Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
             
-            //Outputting crimeInformation for the postcodes
-            var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
+            ////Outputting crimeInformation for the postcodes
+            //var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
 
             /*
             //Single User Information
