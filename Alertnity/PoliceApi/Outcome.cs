@@ -9,6 +9,7 @@ namespace Alertnity.PoliceApi
 {
     public class Outcome
     {
+        public string postcode { get; set; }
         public string category { get; set; }
         public string location_type { get; set; }
         public Location location { get; set; }

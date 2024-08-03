@@ -42,6 +42,7 @@ namespace Alertnity
                     Console.WriteLine("Longitude: " + result.Longitude);
                     Console.WriteLine("Latitude: " + result.Latitude);
                     Console.WriteLine("............................");
+
                 }
 
             }
@@ -76,7 +77,6 @@ namespace Alertnity
             }
         }
 
-
         public static List<CrimeInfo> ProcessCrimeIncidents(Outcome[] crimeIncidents)
         {
             List<CrimeInfo> crimeInfos = new List<CrimeInfo>();
@@ -100,19 +100,19 @@ namespace Alertnity
                     crimeInfos.Add(crimeInfo);
                 }
 
-                foreach (var crime in crimeInfos)
-                {
-                    Console.WriteLine($"Category: {crime.category}");
-                    Console.WriteLine($"Location Type: {crime.location?.street.Id}");
-                    Console.WriteLine($"Location:");
-                    Console.WriteLine($"\tLatitude: {crime.location?.latitude}");
-                    Console.WriteLine($"\tLongitude: {crime.location?.longitude}");
-                    Console.WriteLine($"\tStreet: {crime.location?.street.Name}");
-                    Console.WriteLine($"Outcome Status: {crime.outcome_status?.Category}");
-                    Console.WriteLine($"Month: {crime.outcome_status?.Month}");
+                //foreach (var crime in crimeInfos)
+                //{
+                //    Console.WriteLine($"Category: {crime.category}");
+                //    Console.WriteLine($"Location Type: {crime.location?.street.Id}");
+                //    Console.WriteLine($"Location:");
+                //    Console.WriteLine($"\tLatitude: {crime.location?.latitude}");
+                //    Console.WriteLine($"\tLongitude: {crime.location?.longitude}");
+                //    Console.WriteLine($"\tStreet: {crime.location?.street.Name}");
+                //    Console.WriteLine($"Outcome Status: {crime.outcome_status?.Category}");
+                //    Console.WriteLine($"Month: {crime.outcome_status?.Month}");
                     
-                    Console.WriteLine("------------------");
-                }
+                //    Console.WriteLine("------------------");
+                //}
             }
             else
             {
@@ -121,7 +121,6 @@ namespace Alertnity
 
             return crimeInfos;
         }
-
 
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime date)
         {
@@ -134,7 +133,7 @@ namespace Alertnity
             //string insertDate = date.ToString();
             string insertDate = date.ToString("yyyy-MM");
             //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
-            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=200&limit=30";
+            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=600&limit=100";
             PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
 
             //Save all Longitude and Latitude Into an instance of List<PostcodeConverter>

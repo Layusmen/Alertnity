@@ -3,10 +3,17 @@
 @using Alertnity.PoliceApi
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
+@using Alertnity.Web.Models
+@inject IJSRuntime JSRuntime
+
+<!-- Add references to the Azure Maps Map control JavaScript and CSS files. -->
+<link href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.css" rel="stylesheet" />
+<script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.js"></script>
+
 
 <h1 class="container align-items-center">Welcome to Alertnity! Check Your Community Crime Details</h1>
 <div class="container mt-5 d-flex align-items-center justify-content-center">
-    <EditForm Model=@FormInfo OnValidSubmit="FormSubmitted">
+    <EditForm Model="@FormInfo" OnValidSubmit="FormSubmitted">
         <DataAnnotationsValidator />
         <ValidationSummary />
         <div class="mb-3">
@@ -24,25 +31,101 @@
         <button type="submit" class="btn btn-primary">Submit</button>
     </EditForm>
 </div>
-<h1>Results of Api Pull</h1>
+
 @if (results != null && results.Any())
 {
-    @foreach (var ci in results)
-    {
-        <div>@ci.id</div>
-        <div>@ci.category</div>
-        <div>@ci.outcome_status.Month</div>
-        <div>@ci.outcome_status.Category</div>
-        <div>@ci.context</div>
-        <div>@ci.location.latitude</div>
-        <div>@ci.location.longitude</div>
-        <div>@ci.location_subtype</div>
-        <div>@ci.persistent_id</div>
-        <div>@ci.location_type</div>
-        <div>@ci.month</div>
-    }
+    <h2>Category Counts</h2>
+    int categoryNumber = 0;
+    <table class="table col-sm-12 table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Category</th>
+                <th scope="col">Count</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var kvp in categoryCounts)
+            {
+                categoryNumber++;
+                <tr>
+                    <th scope="row">@categoryNumber</th>
+                    <td>@kvp.Key</td>
+                    <td>@kvp.Value</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h2>Street Count</h2>
+    int streetNumber = 0;
+    <table class="table col-sm-12 table-striped">
+        <thead>
+            <tr>
+                <th scope="col">#</th>
+                <th scope="col">Street</th>
+                <th scope="col">Number of Crimes on the Street</th>
+                <th scope="col">Latitude</th>
+                <th scope="col">Longitude</th>
+                <th scope="col">Crimes Count By Type</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var street in streetCounts)
+            {
+                streetNumber++;
+                <tr>
+                    <th scope="row">@streetNumber</th>
+                    <td>@street.StreetName</td>
+                    <td>@street.CrimeCount</td>
+                    <td>@street.Latitude</td>
+                    <td>@street.Longitude</td>
+                    <td>
+                        <ul>
+                            @foreach (var crimeType in street.CrimeCountsByType)
+                            {
+                                <li>@crimeType.Key: @crimeType.Value</li>
+                            }
+                        </ul>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+
+    <h1 class="text-center pt-4">Record of Crime for @FormInfo.Date.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h1>
+    int crimeCount = 0;
+    <table class="table col-sm-12 table-striped">
+        <thead>
+            <tr>
+                <th scope="col">S/NO</th>
+                <th scope="col">Category</th>
+                <th scope="col">Outcome Status</th>
+                <th scope="col">Location Latitude</th>
+                <th scope="col">Location Longitude</th>
+                <th scope="col">Crime Street</th>
+            </tr>
+        </thead>
+        <tbody>
+
+            @foreach (var ci in results)
+            {
+                crimeCount++;
+                <tr>
+                    <th scope="row">@crimeCount</th>
+                    <td>@ci.category</td>
+                    <td>@ci.outcome_status?.Category</td>
+                    <td>@ci.location?.latitude</td>
+                    <td>@ci.location?.longitude</td>
+                    <td>@ci.location?.street?.Name</td>
+                </tr>
+            }
+        </tbody>
+    </table>
+    <p>Total number of Crimes Recorded for the whole Month: @results.Count</p>
+    <p>Date Searched: @DateTime.Now.ToString("MMMM yyyy")</p>
 }
-else
+else if (results != null)
 {
     <p>No results found.</p>
 }
@@ -50,29 +133,124 @@ else
 @code {
     private CrimeCheckModel FormInfo = new CrimeCheckModel();
     List<CrimeInfo> results = new();
+    private Dictionary<string, int> categoryCounts = new();
+    private List<StreetCrimeData> streetCounts = new();
 
-    public class CrimeCheckModel
-    {
-        [Required]
-        [StringLength(16, ErrorMessage = "Postcode too long (must be 16 character limit).")]
-        public string Postcode { get; set; }
-
-        [Required(ErrorMessage = "The date field is required.")]
-        [RegularExpression(@"^\d{4}-(0[1-9]|1[0-2])$", ErrorMessage = "Invalid date format. Use YYYY-MM.")]
-        public string DateString { get; set; }
-
-        [Required]
-        public DateTime Date
-        {
-            get
-            {
-                return DateTime.ParseExact(DateString, "yyyy-MM", CultureInfo.InvariantCulture);
-            }
-        }
-    }
-
-    public void FormSubmitted()
+    public async Task FormSubmitted()
     {
         results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date);
+        if (results != null && results.Any())
+        {
+            CountCategories();
+            CountStreets();
+
+            // Get first crime's coordinates and parse them to float
+            var firstResultLongitude = float.Parse(results[0].location.longitude.ToString(CultureInfo.InvariantCulture));
+            var firstResultLatitude = float.Parse(results[0].location.latitude.ToString(CultureInfo.InvariantCulture));
+
+            
+            // Calling JS function with coordinates
+            await JSRuntime.InvokeVoidAsync("getMap", firstResultLongitude, firstResultLatitude );
+        }
+        else{ Console.WriteLine("Check the authenticity of the api addresses. Something is wrong somewhere"); }
+    }
+
+    private void CountCategories()
+    {
+        categoryCounts = results
+            .GroupBy(ci => ci.category)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    private void CountStreets()
+    {
+        streetCounts = results
+            .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
+            .Select(g => new StreetCrimeData
+                {
+                    StreetName = g.Key.Name,
+                    CrimeCount = g.Count(),
+                    Latitude = g.Key.latitude,
+                    Longitude = g.Key.longitude,
+                    Crimes = string.Join(", ", g.Select(ci => ci.category)),
+                    CrimeCountsByType = g.GroupBy(ci => ci.category)
+                                            .ToDictionary(grp => grp.Key, grp => grp.Count())
+                })
+            .ToList();
+    }
+
+    public class StreetCrimeData
+    {
+        public string? StreetName { get; set; }
+        public int CrimeCount { get; set; }
+        public string? Latitude { get; set; }
+        public string? Longitude { get; set; }
+        public string? Crimes { get; set; }
+        public Dictionary<string, int>? CrimeCountsByType { get; set; }
     }
 }
+
+<script>
+    window.getMap = function (firstResultLongitude, firstResultLatitude) {
+        console.log("Received coordinates: ", firstResultLongitude, firstResultLatitude);
+        // Initialize a map instance with the received coordinates
+        map = new atlas.Map('myMap', {
+            center: [firstResultLongitude, firstResultLatitude], // Use the received coordinates here
+            zoom: 13,
+            view: 'Auto',
+
+            // AzureMap Authentication
+            authOptions: {
+                // Alternatively, use an Azure Maps key. Get an Azure Maps key at https://azure.com/maps. NOTE: The primary key should be used as the key.
+                authType: 'subscriptionKey',
+                subscriptionKey: '3UzKDPLy12XBZ29RhdB9DVQo5lb3ewnSmvtgGzmPW4CaLBbL1Mi1JQQJ99AHACi5Ypz6xdAlAAAgAZMPfHOj'
+            }
+        });
+
+        // Log the map center to confirm it has been set correctly
+        console.log("Map center set to: ", map.getCamera().center);
+
+        // Wait until the map resources are ready.
+        map.events.add('ready', function () {
+            console.log("Map is ready.");
+
+            // Create a data source and add it to the map.
+            var datasource = new atlas.source.DataSource();
+            map.sources.add(datasource);
+
+            // Create a circle from a Point feature by providing it a subType property set to "Circle" and radius property.
+            var pointFeature = new atlas.data.Feature(new atlas.data.Point([firstResultLongitude, firstResultLatitude]), {
+                subType: "Circle",
+                radius: 1000
+            });
+            datasource.add(pointFeature);
+
+            // Log the point feature details
+            console.log("Datasource point feature: ", pointFeature);
+
+            // Create a polygon layer to render the filled-in area of the circle polygon, and add it to the map.
+            map.layers.add(new atlas.layer.PolygonLayer(datasource, null, {
+                fillColor: 'green'
+            }));
+
+            var markerPosition = [firstResultLongitude, firstResultLatitude];
+            console.log("Adding marker at position: ", markerPosition);
+
+            var marker = new atlas.HtmlMarker({
+                htmlContent: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="37" viewBox="0 0 30 37" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="30" height="30" fill="{color}"/><polygon fill="{color}" points="10,29 20,29 15,37 10,29"/><text x="15" y="20" style="font-size:16px;font-family:arial;fill:#ffffff;" text-anchor="middle">{text}</text></svg>',
+                color: 'Purple',
+                text: '2',
+                position: markerPosition
+            });
+
+            // Create a HTML marker and add it to the map.
+            map.markers.add(marker);
+
+            // Optional: Check if the marker has been added
+            console.log("Marker added to the map: ", map.markers.getMarkers());
+        });
+    }
+
+</script>
+
+<div id="myMap" style="position:relative;width:50%;min-width:290px;height:600px;"></div>
