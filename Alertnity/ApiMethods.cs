@@ -124,15 +124,9 @@ namespace Alertnity
 
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime date)
         {
-            //Console.WriteLine("Enter postcode:");
-            //string insertPostcode = Console.ReadLine();
-
-            //Console.WriteLine("Enter Date  int this format 2017-01:");
-            //string insertDate = Console.ReadLine();
-
             //string insertDate = date.ToString();
             string insertDate = date.ToString("yyyy-MM");
-            //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 200m radius and 20 postcode limit
+            //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 600m radius and 100 postcode limit
             var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=600&limit=100";
             PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
 

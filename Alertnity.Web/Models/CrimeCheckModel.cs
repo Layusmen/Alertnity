@@ -6,7 +6,7 @@ namespace Alertnity.Web.Models
     public class CrimeCheckModel
     {
         [Required]
-        [StringLength(16, ErrorMessage = "Postcode too long (must be 16 character limit).")]
+        [StringLength(10, ErrorMessage = "Postcode too long (must not be more than 16 character).")]
         public string Postcode { get; set; }
 
         [Required(ErrorMessage = "The date field is required.")]

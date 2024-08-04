@@ -6,11 +6,6 @@
 @using Alertnity.Web.Models
 @inject IJSRuntime JSRuntime
 
-<!-- Add references to the Azure Maps Map control JavaScript and CSS files. -->
-<link href="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.css" rel="stylesheet" />
-<script src="https://atlas.microsoft.com/sdk/javascript/mapcontrol/3/atlas.min.js"></script>
-
-
 <h1 class="container align-items-center">Welcome to Alertnity! Check Your Community Crime Details</h1>
 <div class="container mt-5 d-flex align-items-center justify-content-center">
     <EditForm Model="@FormInfo" OnValidSubmit="FormSubmitted">
@@ -31,12 +26,13 @@
         <button type="submit" class="btn btn-primary">Submit</button>
     </EditForm>
 </div>
-
+<h2 class="text-center pt-4">Crime Scene Map</h2>
+<div id="myMap" class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:600px;"></div>
 @if (results != null && results.Any())
 {
-    <h2>Category Counts</h2>
+    <h2 class="text-center pt-4">Category Counts</h2>
     int categoryNumber = 0;
-    <table class="table col-sm-12 table-striped">
+    <table class="table table-bordered col-sm-12 table-striped">
         <thead>
             <tr>
                 <th scope="col">#</th>
@@ -57,9 +53,9 @@
         </tbody>
     </table>
 
-    <h2>Street Count</h2>
+    <h2 class="text-center pt-4">Street Count</h2>
     int streetNumber = 0;
-    <table class="table col-sm-12 table-striped">
+    <table class="table table-bordered col-sm-12 table-striped">
         <thead>
             <tr>
                 <th scope="col">#</th>
@@ -93,9 +89,9 @@
         </tbody>
     </table>
 
-    <h1 class="text-center pt-4">Record of Crime for @FormInfo.Date.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h1>
+    <h2 class="text-center pt-4">Record of Crime for @FormInfo.Date.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h2>
     int crimeCount = 0;
-    <table class="table col-sm-12 table-striped">
+    <table class="table  table-bordered col-sm-12 table-striped">
         <thead>
             <tr>
                 <th scope="col">S/NO</th>
@@ -131,9 +127,13 @@ else if (results != null)
 }
 
 @code {
+
     private CrimeCheckModel FormInfo = new CrimeCheckModel();
+
     List<CrimeInfo> results = new();
+
     private Dictionary<string, int> categoryCounts = new();
+
     private List<StreetCrimeData> streetCounts = new();
 
     public async Task FormSubmitted()
@@ -143,16 +143,19 @@ else if (results != null)
         {
             CountCategories();
             CountStreets();
+            // Pass the crime data to JavaScript
+            var crimeData = results.Select(ci => new
+            {
+                Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
+                Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
+                Street = ci.location.street.Name,
+                Count = results.Count(c => c.location.longitude == ci.location.longitude && c.location.latitude == ci.location.latitude && ci.location.street.Name == ci.location.street.Name)
+            }).ToList();
 
-            // Get first crime's coordinates and parse them to float
-            var firstResultLongitude = float.Parse(results[0].location.longitude.ToString(CultureInfo.InvariantCulture));
-            var firstResultLatitude = float.Parse(results[0].location.latitude.ToString(CultureInfo.InvariantCulture));
-
-            
             // Calling JS function with coordinates
-            await JSRuntime.InvokeVoidAsync("getMap", firstResultLongitude, firstResultLatitude );
+            await JSRuntime.InvokeVoidAsync("getMap", crimeData);
         }
-        else{ Console.WriteLine("Check the authenticity of the api addresses. Something is wrong somewhere"); }
+        else { Console.WriteLine("Check the authenticity of the api addresses. Something is wrong somewhere"); }
     }
 
     private void CountCategories()
@@ -174,83 +177,97 @@ else if (results != null)
                     Longitude = g.Key.longitude,
                     Crimes = string.Join(", ", g.Select(ci => ci.category)),
                     CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                            .ToDictionary(grp => grp.Key, grp => grp.Count())
+                                                .ToDictionary(grp => grp.Key, grp => grp.Count())
                 })
             .ToList();
-    }
-
-    public class StreetCrimeData
-    {
-        public string? StreetName { get; set; }
-        public int CrimeCount { get; set; }
-        public string? Latitude { get; set; }
-        public string? Longitude { get; set; }
-        public string? Crimes { get; set; }
-        public Dictionary<string, int>? CrimeCountsByType { get; set; }
     }
 }
 
 <script>
-    window.getMap = function (firstResultLongitude, firstResultLatitude) {
-        console.log("Received coordinates: ", firstResultLongitude, firstResultLatitude);
-        // Initialize a map instance with the received coordinates
-        map = new atlas.Map('myMap', {
-            center: [firstResultLongitude, firstResultLatitude], // Use the received coordinates here
-            zoom: 13,
-            view: 'Auto',
+    window.getMap = function (crimeData) {
+                if (!crimeData || crimeData.length === 0) {
+                    console.error("No crime data provided.");
+                    return;
+                }
 
-            // AzureMap Authentication
-            authOptions: {
-                // Alternatively, use an Azure Maps key. Get an Azure Maps key at https://azure.com/maps. NOTE: The primary key should be used as the key.
-                authType: 'subscriptionKey',
-                subscriptionKey: '3UzKDPLy12XBZ29RhdB9DVQo5lb3ewnSmvtgGzmPW4CaLBbL1Mi1JQQJ99AHACi5Ypz6xdAlAAAgAZMPfHOj'
+                // Debugging: Check the crime data
+                console.log("Received crime data: ", crimeData);
+
+                // Ensure the first item has valid coordinates
+                const firstCrime = crimeData[0];
+                const longitude = parseFloat(firstCrime.longitude);
+                const latitude = parseFloat(firstCrime.latitude);
+
+                if (isNaN(longitude) || isNaN(latitude)) {
+                    console.error("Invalid coordinates for the first crime data:", firstCrime);
+                    return;
+                }
+
+                // Initialize the map instance with the first crime location
+                var map = new atlas.Map('myMap', {
+                    center: [longitude, latitude],
+                    zoom: 13,
+                    view: 'Auto',
+
+                    // AzureMap Authentication
+                    authOptions: {
+                        authType: 'subscriptionKey',
+                        subscriptionKey: '3UzKDPLy12XBZ29RhdB9DVQo5lb3ewnSmvtgGzmPW4CaLBbL1Mi1JQQJ99AHACi5Ypz6xdAlAAAgAZMPfHOj'
+                    }
+                });
+
+                // Wait until the map resources are ready
+                map.events.add('ready', function () {
+                    console.log("Map is ready.");
+
+                    // Create a data source and add it to the map
+                    var datasource = new atlas.source.DataSource();
+                    map.sources.add(datasource);
+
+                    // Create a circle from the first crime location's coordinates
+                    var pointFeature = new atlas.data.Feature(new atlas.data.Point([longitude, latitude]), {
+                        subType: "Circle",
+                        radius: 600
+                    });
+                    datasource.add(pointFeature);
+
+                    // Log the point feature details
+                    console.log("Datasource point feature: ", pointFeature);
+
+                    // Create a polygon layer to render the filled-in area of the circle polygon, and add it to the map
+                    map.layers.add(new atlas.layer.PolygonLayer(datasource, null, {
+                        fillColor: 'green'
+                    }));
+
+                    // Add markers for all crime locations
+                    crimeData.forEach(function (crime) {
+                        var markerPosition = [parseFloat(crime.longitude), parseFloat(crime.latitude)];
+
+                        // Ensure marker position has valid coordinates
+                        if (isNaN(markerPosition[0]) || isNaN(markerPosition[1])) {
+                            console.error("Invalid coordinates for marker: ", markerPosition);
+                            return;
+                        }
+
+                        console.log("Adding marker at position: ", markerPosition);
+
+                        var marker = new atlas.HtmlMarker({
+                            htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
+                            <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
+                            </svg>`,
+                            color: '',
+                            text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
+
+                            position: markerPosition
+                        });
+
+                        // Add marker to the map
+                        map.markers.add(marker);
+                    });
+
+                    // Optional: Check if the markers have been added
+                    console.log("Markers added to the map: ", map.markers.getMarkers());
+                });
             }
-        });
-
-        // Log the map center to confirm it has been set correctly
-        console.log("Map center set to: ", map.getCamera().center);
-
-        // Wait until the map resources are ready.
-        map.events.add('ready', function () {
-            console.log("Map is ready.");
-
-            // Create a data source and add it to the map.
-            var datasource = new atlas.source.DataSource();
-            map.sources.add(datasource);
-
-            // Create a circle from a Point feature by providing it a subType property set to "Circle" and radius property.
-            var pointFeature = new atlas.data.Feature(new atlas.data.Point([firstResultLongitude, firstResultLatitude]), {
-                subType: "Circle",
-                radius: 1000
-            });
-            datasource.add(pointFeature);
-
-            // Log the point feature details
-            console.log("Datasource point feature: ", pointFeature);
-
-            // Create a polygon layer to render the filled-in area of the circle polygon, and add it to the map.
-            map.layers.add(new atlas.layer.PolygonLayer(datasource, null, {
-                fillColor: 'green'
-            }));
-
-            var markerPosition = [firstResultLongitude, firstResultLatitude];
-            console.log("Adding marker at position: ", markerPosition);
-
-            var marker = new atlas.HtmlMarker({
-                htmlContent: '<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="30" height="37" viewBox="0 0 30 37" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="30" height="30" fill="{color}"/><polygon fill="{color}" points="10,29 20,29 15,37 10,29"/><text x="15" y="20" style="font-size:16px;font-family:arial;fill:#ffffff;" text-anchor="middle">{text}</text></svg>',
-                color: 'Purple',
-                text: '2',
-                position: markerPosition
-            });
-
-            // Create a HTML marker and add it to the map.
-            map.markers.add(marker);
-
-            // Optional: Check if the marker has been added
-            console.log("Marker added to the map: ", map.markers.getMarkers());
-        });
-    }
-
 </script>
 
-<div id="myMap" style="position:relative;width:50%;min-width:290px;height:600px;"></div>
