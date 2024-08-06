@@ -1,6 +1,20 @@
 using Alertnity.Web.Components;
+using Blazorise;
+using Blazorise.Bootstrap5;
+using Blazorise.Icons.FontAwesome;
+
 
 var builder = WebApplication.CreateBuilder(args);
+
+// Add Blazorise services to the container.
+builder.Services
+    .AddBlazorise(options =>
+    {
+        options.Immediate = true;
+    })
+    .AddBootstrap5Providers()
+    .AddFontAwesomeIcons();
+
 
 // Add services to the container.
 builder.Services.AddRazorComponents()

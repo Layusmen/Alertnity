@@ -6,12 +6,11 @@ namespace Alertnity.Web.Models
     public class CrimeCheckModel
     {
         [Required]
-        [StringLength(10, ErrorMessage = "Postcode too long (must not be more than 16 character).")]
-        public string Postcode { get; set; }
+        public string Postcode { get; set; } = string.Empty;
 
-        [Required(ErrorMessage = "The date field is required.")]
-        [RegularExpression(@"^\d{4}-(0[1-9]|1[0-2])$", ErrorMessage = "Invalid date format. Use YYYY-MM.")]
-        public string DateString { get; set; }
+        [Required(ErrorMessage = "Date is required.")]
+        [RegularExpression(@"\d{4}-\d{2}", ErrorMessage = "Date must be in the format YYYY-MM.")]
+        public string DateString { get; set; } = string.Empty;
 
         [Required]
         public DateTime Date

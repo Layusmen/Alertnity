@@ -6,4 +6,12 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <Nullable>enable</Nullable>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Blazorise" Version="1.6.0" />
+    <PackageReference Include="Blazorise.Bootstrap5" Version="1.6.0" />
+    <PackageReference Include="Blazorise.Components" Version="1.6.0" />
+    <PackageReference Include="Blazorise.Icons.FontAwesome" Version="1.6.0" />
+    <PackageReference Include="Blazorise.LoadingIndicator" Version="1.6.0" />
+  </ItemGroup>
 </Project>
