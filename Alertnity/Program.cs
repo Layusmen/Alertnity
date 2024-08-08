@@ -17,8 +17,28 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
-            
 
+            string directoryPath = @"C:\Users\ola\OneDrive\Desktop\Police";
+            string searchPattern = "2014*";
+
+            string[] subdirectories = Directory.GetDirectories(directoryPath,searchPattern);
+
+            if (subdirectories.Length > 0)
+            {
+                Console.WriteLine("Found subdirectories:");
+                foreach (string subdirectory in subdirectories)
+                {
+                    Console.WriteLine(subdirectory);
+                }
+            }
+            else
+            {
+                Console.WriteLine("No subdirectories found.");
+            }
+         //   else
+         //   {
+         //       Console.WriteLine("No files found.");
+         //   }
         }
     }
 }

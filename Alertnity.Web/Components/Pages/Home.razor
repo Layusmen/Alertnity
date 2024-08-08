@@ -7,8 +7,6 @@
 @inject IJSRuntime JSRuntime
 @using Blazorise
 
-
-
 <h1 class="container mt-3 align-items-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
 <div class="container mt-5 d-flex align-items-center justify-content-center">
@@ -30,7 +28,8 @@
                     Date To Check
                 </FieldLabel>
                 <FieldBody>
-                    <YearMonthInput Placeholder="Insert Year and Month; YYYY-MM" TValue="Text" @bind-Value="FormInfo.DateString" />
+                    
+                  <YearMonthInput Placeholder="YYYY-MM" TValue="Text" @bind-Value="FormInfo.DateString" />
                 </FieldBody>
                 <FieldLabel>
                     Insert month in this format: YYYY-MM.
@@ -43,114 +42,29 @@
 </div>
 
 <!--Crime Map Display-->
-<h2 class="text-center pt-4">Crime Scene Map</h2>
-<div id="myMap" class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:600px;">
-</div>
+<CrimeMap />
+
 
 @if (results != null && results.Any())
 {
-    <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:600px;">
-        <h2 class="text-center pt-4">Category Counts</h2>
-        <div class="mb-3">
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
-        </div>
-
-        <Table @ref="@tableRef" FixedHeader FixedHeaderTableHeight="600px">
-
-            <TableHeader ThemeContrast="ThemeContrast.Dark">
-                <TableRow>
-                    <TableHeaderCell>#</TableHeaderCell>
-                    <TableHeaderCell>Category</TableHeaderCell>
-                    <TableHeaderCell>Count</TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-
-            @{
-                // Reset categoryNumber before starting the loop
-                int categoryNumber = 0;
-            }
-            @foreach (var (index, kvp) in categoryCounts.Select((kvp, index) => (index, kvp)))
-            {
-                categoryNumber++;
-                <TableBody>
-
-                    <TableRow>
-                        <TableRowHeader>@(index + 1)</TableRowHeader>
-                        <TableRowCell>@kvp.Key</TableRowCell>
-                        <TableRowCell>@kvp.Value</TableRowCell>
-                    </TableRow>
-
-                </TableBody>
-            }
-        </Table>
-    </div>
-
-    <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
-        <h2 class="text-center pt-4">Street Crime Counts</h2>
-        <div class="mb-3">
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
-        </div>
-
-        <Table @ref="@tableRef" FixedHeader FixedHeaderTableHeight="600px">
-            <TableHeader ThemeContrast="ThemeContrast.Dark">
-                <TableRow>
-                    <TableHeaderCell>#</TableHeaderCell>
-                    <TableHeaderCell>Street</TableHeaderCell>
-                    <TableHeaderCell>Number of Crimes on the Street</TableHeaderCell>
-                    <TableHeaderCell>Latitude</TableHeaderCell>
-                    <TableHeaderCell>Longitude</TableHeaderCell>
-                    <TableHeaderCell>Crimes Count By Type</TableHeaderCell>
-                </TableRow>
-            </TableHeader>
-            @foreach (var (index, street) in streetCounts.Select((street, index) => (index, street)))
-            {
-                <TableBody>
-                    <TableRow>
-                        <TableRowHeader>@(index + 1)</TableRowHeader>
-                        
-                        <TableRowCell>@street.StreetName</TableRowCell>
-                        <TableRowCell>@street.CrimeCount</TableRowCell>
-                        <TableRowCell>@street.Latitude</TableRowCell>
-                        <TableRowCell>@street.Longitude</TableRowCell>
-                        <TableRowCell>
-                            <ul>
-                                @foreach (var crimeType in street.CrimeCountsByType)
-                                {
-                                    <li>@crimeType.Key: @crimeType.Value</li>
-                                }
-                            </ul>
-                        </TableRowCell>
-                    </TableRow>
-                </TableBody>
-            }
-        </Table>
-    </div>
-
-    <div class="m-3">
-        <p>Total number of Crimes Recorded for the whole Month: @results.Count</p>
-        <p>Date Searched: @DateTime.Now.ToString("MMMM yyyy")</p>
-    </div>
+        <CategoryCountTable categoryCounts="@categoryCounts"/>
+        <StreetCountTable streetCounts="@streetCounts" />
+        <CrimeRecordTable results="@results" FormInfo="@FormInfo" />
 }
 
 @code {
 
     private CrimeCheckModel FormInfo = new CrimeCheckModel();
-    List<CrimeInfo> results = new();
+    private List<CrimeInfo> results = new();
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
 
     private async Task FormSubmitted()
     {
-
         // Handle form submission
         Console.WriteLine($"Submitted Postcode: {FormInfo.Postcode}");
         Console.WriteLine($"Submitted Date: {FormInfo.DateString}");
-
-
         results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date);
-
         if (results != null && results.Any())
         {
             CountCategories();
@@ -193,16 +107,6 @@
                 })
             .ToList();
     }
-
-    //TableRef
-
-    Table tableRef;
-
-    private Task ScrollToRow()
-    => tableRef.ScrollToRow(1).AsTask();
-
-    private Task ScrollToPixels()
-    => tableRef.ScrollToPixels(400).AsTask();
 
 
 

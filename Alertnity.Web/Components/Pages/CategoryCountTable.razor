@@ -1,0 +1,32 @@
+@using Blazorise
+
+@if (categoryCounts != null && categoryCounts.Any())
+{
+    <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:600px;">
+        <h2 class="text-center pt-4">Category Counts</h2>
+        <Table FixedHeader FixedHeaderTableHeight="800px">
+            <TableHeader ThemeContrast="ThemeContrast.Dark">
+                <TableRow>
+                    <TableHeaderCell>#</TableHeaderCell>
+                    <TableHeaderCell>Category</TableHeaderCell>
+                    <TableHeaderCell>Count</TableHeaderCell>
+                </TableRow>
+            </TableHeader>
+            @foreach (var (index, kvp) in categoryCounts.Select((kvp, index) => (index, kvp)))
+            {
+                <TableBody>
+                    <TableRow>
+                        <TableRowHeader>@(index + 1)</TableRowHeader>
+                        <TableRowCell>@kvp.Key</TableRowCell>
+                        <TableRowCell>@kvp.Value</TableRowCell>
+                    </TableRow>
+                </TableBody>
+            }
+        </Table>
+    </div>
+}
+
+@code {
+    [Parameter]
+    public Dictionary<string, int> categoryCounts { get; set; }
+}

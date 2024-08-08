@@ -1,0 +1,46 @@
+﻿@using Alertnity.Web.Models
+@using Blazorise
+
+<div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
+    <h2 class="text-center pt-4">Street Crime Counts</h2>
+
+    <Table FixedHeader FixedHeaderTableHeight="800px">
+        <TableHeader ThemeContrast="ThemeContrast.Dark">
+            <TableRow>
+                <TableHeaderCell>#</TableHeaderCell>
+                <TableHeaderCell>Street</TableHeaderCell>
+                <TableHeaderCell>Number of Crimes on the Street</TableHeaderCell>
+                <TableHeaderCell>Latitude</TableHeaderCell>
+                <TableHeaderCell>Longitude</TableHeaderCell>
+                <TableHeaderCell>Crimes Count By Type</TableHeaderCell>
+            </TableRow>
+        </TableHeader>
+        @foreach (var (index, street) in streetCounts.Select((street, index) => (index, street)))
+        {
+            <TableBody>
+                <TableRow>
+                    <TableRowHeader>@(index + 1)</TableRowHeader>
+
+                    <TableRowCell>@street.StreetName</TableRowCell>
+                    <TableRowCell>@street.CrimeCount</TableRowCell>
+                    <TableRowCell>@street.Latitude</TableRowCell>
+                    <TableRowCell>@street.Longitude</TableRowCell>
+                    <TableRowCell>
+                        <ul>
+                            @foreach (var crimeType in street.CrimeCountsByType)
+                            {
+                                <li>@crimeType.Key: @crimeType.Value</li>
+                            }
+                        </ul>
+                    </TableRowCell>
+                </TableRow>
+            </TableBody>
+        }
+    </Table>
+</div>
+
+@code {
+    [Parameter]
+    public List<StreetCrimeData> streetCounts { get; set; }
+    
+}
