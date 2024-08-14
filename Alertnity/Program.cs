@@ -4,11 +4,14 @@ using static System.Net.WebRequestMethods;
 using System.Threading.Tasks;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using System.Security.Cryptography.X509Certificates;
 using System.IO;
 using Alertnity.PoliceApi;
 using Alertnity.PostcodeApi;
-
+using CsvHelper;
+using System.Globalization;
+using System.Linq;
+using Microsoft.Data.Analysis;
+using Alertnity.ArchiveDataAnalysis;
 
 
 namespace Alertnity
@@ -17,28 +20,20 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
+            string directoryPath = @"C:\Users\ola\Desktop\Police";
+            
 
-            string directoryPath = @"C:\Users\ola\OneDrive\Desktop\Police";
-            string searchPattern = "2014*";
+            Dictionary<string, int> TotalCrimeTypeCounts = MonthCrimeAnalysis.MonthCrimeCheck(directoryPath);
+            
 
-            string[] subdirectories = Directory.GetDirectories(directoryPath,searchPattern);
+            
 
-            if (subdirectories.Length > 0)
-            {
-                Console.WriteLine("Found subdirectories:");
-                foreach (string subdirectory in subdirectories)
-                {
-                    Console.WriteLine(subdirectory);
-                }
-            }
-            else
-            {
-                Console.WriteLine("No subdirectories found.");
-            }
-         //   else
-         //   {
-         //       Console.WriteLine("No files found.");
-         //   }
+            Console.Read();
+
+
+
         }
+
     }
+
 }

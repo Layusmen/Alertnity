@@ -7,9 +7,9 @@
 @inject IJSRuntime JSRuntime
 @using Blazorise
 
-<h1 class="container mt-3 align-items-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
+<h1 class="container mt-2 d-flex align-items-center justify-content-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
-<div class="container mt-5 d-flex align-items-center justify-content-center">
+<div class="container mt-2 d-flex align-items-center justify-content-center">
     <EditForm Model="@FormInfo">
         <Fields>
             <Field ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnMobile">
@@ -50,6 +50,10 @@
         <CategoryCountTable categoryCounts="@categoryCounts"/>
         <StreetCountTable streetCounts="@streetCounts" />
         <CrimeRecordTable results="@results" FormInfo="@FormInfo" />
+}
+else
+{
+    Console.Write("No Data Passed into the result");
 }
 
 @code {
