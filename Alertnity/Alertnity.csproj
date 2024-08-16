@@ -8,10 +8,6 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <None Include="..\Alertnity.Web\Components\Pages\Map.razor" Link="Map.razor" />
-  </ItemGroup>
-
-  <ItemGroup>
     <PackageReference Include="Blazorise" Version="1.6.0" />
     <PackageReference Include="Blazorise.Bootstrap5" Version="1.6.0" />
     <PackageReference Include="Blazorise.Components" Version="1.6.0" />
