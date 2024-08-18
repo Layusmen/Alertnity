@@ -9,10 +9,10 @@ namespace Alertnity
 {
     internal class CrimeArchiveIncident
     {
-        DateTime Time;
-        Location Location;
-        string CrimeType;
-        int Count = 0;
+        //DateTime Time;
+        //Location Location;
+        //string CrimeType;
+        //int Count = 0;
         
 //"[Month, 2014-01]"
 //"[Reported by, Hampshire Constabulary]"

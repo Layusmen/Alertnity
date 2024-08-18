@@ -20,18 +20,17 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
+            //Monthly analysis
             //string directoryPath = @"C:\Users\ola\Desktop\Police";
-
-
             //Dictionary<string, int> TotalCrimeTypeCounts = MonthCrimeAnalysis.MonthCrimeCheckWithArchive(directoryPath);
 
 
-            //Example usage
+            //Area
             string directoryPath = @"C:\Users\ola\Desktop\Police";
             double inputLatitude = 50.848409;
             double inputLongitude = -1.088152;
 
-            var crimeCounts = CrimeAnalyzer.CoordinateCrimeCheckFromArchive(directoryPath, inputLatitude, inputLongitude);
+            var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, inputLatitude, inputLongitude);
 
             //
             Console.Read();

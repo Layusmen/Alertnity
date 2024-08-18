@@ -13,8 +13,8 @@ namespace Alertnity.ArchiveDataAnalysis
     {
         public static Dictionary<string, int> MonthCrimeCheckWithArchive(string directoryPath)
         {
-            bool isSingleMonth = CrimeAnalyzer.GetSearchType();
-            (DateTime startDateTime, DateTime endDateTime) = CrimeAnalyzer.GetDateRange(isSingleMonth);
+            bool isSingleMonth = ArchiveCrimeByRadius.GetSearchType();
+            (DateTime startDateTime, DateTime endDateTime) = ArchiveCrimeByRadius.GetDateRange(isSingleMonth);
 
             string firstKeyword = "hampshire";
             string secondKeyword = "street";
@@ -95,7 +95,7 @@ namespace Alertnity.ArchiveDataAnalysis
 
                 if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
                 {
-                    if (CrimeAnalyzer.IsFileInRange(fileName, firstKeyword, secondKeyword, fileDate, startDateTime, endDateTime, isSingleMonth))
+                    if (ArchiveCrimeByRadius.IsFileInRange(fileName, firstKeyword, secondKeyword, fileDate, startDateTime, endDateTime, isSingleMonth))
                     {
                         Console.WriteLine($"Processing file: {csvFile}");
                         ProcessCsvFile(csvFile, ref totalCrimeTypeCounts);
