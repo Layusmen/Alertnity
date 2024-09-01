@@ -5,87 +5,92 @@
 @using System.Globalization
 @using Alertnity.Web.Models
 @inject IJSRuntime JSRuntime
-@using Blazorise
+@using Blazorise;
 
 <h1 class="container mt-2 d-flex align-items-center justify-content-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
 <div class="container mt-2 d-flex align-items-center justify-content-center">
-    <EditForm Model="@FormInfo">
-        <Fields>
-            <Field ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnMobile">
-                <FieldLabel>
-                    Postcode
-                </FieldLabel>
-                <FieldBody>
-                    <TextEdit Placeholder="Postcode" TValue="Text" @bind-Text="FormInfo.Postcode" />
-                    <Paragraph>
-                        Please Insert Postcode in this format: PO148B
-                    </Paragraph>
-                </FieldBody>
-            </Field>
-            <Field ColumnSize="ColumnSize.Is6.OnDesktop.Is12.OnMobile">
-                <FieldLabel>
-                    Date To Check
-                </FieldLabel>
-                <FieldBody>
-                    
-                  <YearMonthInput Placeholder="YYYY-MM" TValue="Text" @bind-Value="FormInfo.DateString" />
-                </FieldBody>
-                <FieldLabel>
-                    Insert month in this format: YYYY-MM.
-                </FieldLabel>
-            </Field>
-            <Button Color="Color.Primary" Clicked="@FormSubmitted">Submit</Button>
-        </Fields>
-    </EditForm>
+    <EditForm Model="@FormInfo" OnValidSubmit="FormSubmitted">
+        <div class="mb-3">
+            <label for="postcode" class="form-label">Postcode</label>
+            <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="FormInfo.Postcode" />
+            <div class="form-text">
+                Please Insert Postcode in this format: PO148B
+            </div>
+        </div>
 
+        <div class="mb-3">
+            <label for="date" class="form-label">Date To Check</label>
+
+            <InputDate  class="form-control" @bind-Value="FormInfo.Date" />
+            <div class="form-text">
+                Insert month in this format: YYYY-MM.
+            </div>
+        </div>
+
+        <button type="submit" class="btn btn-primary">Submit</button>
+    </EditForm>
 </div>
 
-<!--Crime Map Display-->
-<CrimeMap />
-
+<!-- Crime Map Display -->
+<CrimeMap/>
 
 @if (results != null && results.Any())
 {
-        <CategoryCountTable categoryCounts="@categoryCounts"/>
-        <StreetCountTable streetCounts="@streetCounts" />
-        <CrimeRecordTable results="@results" FormInfo="@FormInfo" />
+    <CategoryCountTable categoryCounts="@categoryCounts" />
+    <StreetCountTable streetCounts="@streetCounts" />
+    <CrimeRecordTable results="@results" FormInfo="@FormInfo" />
 }
 else
 {
+    <div>
+        No Data Passed into the result
+    </div>
     Console.Write("No Data Passed into the result");
 }
 
 @code {
-
     private CrimeCheckModel FormInfo = new CrimeCheckModel();
     private List<CrimeInfo> results = new();
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
 
     private async Task FormSubmitted()
-    {
-        // Handle form submission
+    { 
         Console.WriteLine($"Submitted Postcode: {FormInfo.Postcode}");
-        Console.WriteLine($"Submitted Date: {FormInfo.DateString}");
-        results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date);
+        Console.WriteLine($"Submitted Date: {FormInfo.Date}");
+
+        if(FormInfo.Date.HasValue)
+        {
+            var monthYear = FormInfo.Date.Value.ToString("yyyy-MM");
+            Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
+            results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date.Value);
+        }
+        else
+        {
+            Console.WriteLine("Date is not picked");
+        }
+
         if (results != null && results.Any())
         {
             CountCategories();
             CountStreets();
-            // Pass the crime data to JavaScript
             var crimeData = results.Select(ci => new
             {
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
-                Count = results.Count(c => c.location.longitude == ci.location.longitude && c.location.latitude == ci.location.latitude && ci.location.street.Name == ci.location.street.Name)
+                Count = results.Count(c => c.location.longitude == ci.location.longitude 
+                    && c.location.latitude == ci.location.latitude 
+                    && ci.location.street.Name == ci.location.street.Name)
             }).ToList();
 
-            // Calling JS function with coordinates
             await JSRuntime.InvokeVoidAsync("getMap", crimeData);
         }
-        else { Console.WriteLine("Check the authenticity of the api addresses. Something is wrong somewhere"); }
+        else
+        {
+            Console.WriteLine("Check the authenticity of the API addresses. Something is wrong somewhere");
+        }
     }
 
     private void CountCategories()
@@ -107,13 +112,10 @@ else
                     Longitude = g.Key.longitude,
                     Crimes = string.Join(", ", g.Select(ci => ci.category)),
                     CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                                                                        .ToDictionary(grp => grp.Key, grp => grp.Count())
+                                         .ToDictionary(grp => grp.Key, grp => grp.Count())
                 })
             .ToList();
     }
-
-
-
 }
 <script>
     window.getMap = function (crimeData) {
@@ -122,10 +124,10 @@ else
             return;
         }
 
-        // Debugging: Check the crime data
+        // Check the crime data
         console.log("Received crime data: ", crimeData);
 
-        // Ensure the first item has valid coordinates
+        // Check for coordinates validity
         const firstCrime = crimeData[0];
         const longitude = parseFloat(firstCrime.longitude);
         const latitude = parseFloat(firstCrime.latitude);
@@ -135,7 +137,7 @@ else
             return;
         }
 
-        // Initialize the map instance with the first crime location
+        // map instance with the first crime location
         var map = new atlas.Map('myMap', {
             center: [longitude, latitude],
             zoom: 13,
@@ -148,11 +150,11 @@ else
             }
         });
 
-        // Wait until the map resources are ready
+        // check if map is ready
         map.events.add('ready', function () {
             console.log("Map is ready.");
 
-            // Create a data source and add it to the map
+            // Create a data source and add to map
             var datasource = new atlas.source.DataSource();
             map.sources.add(datasource);
 
@@ -166,7 +168,7 @@ else
             // Log the point feature details
             console.log("Datasource point feature: ", pointFeature);
 
-            // Create a polygon layer to render the filled-in area of the circle polygon, and add it to the map
+            // Create a polygon layer to render the filled-in area
             map.layers.add(new atlas.layer.PolygonLayer(datasource, null, {
                 fillColor: 'green'
             }));
@@ -175,7 +177,7 @@ else
             crimeData.forEach(function (crime) {
                 var markerPosition = [parseFloat(crime.longitude), parseFloat(crime.latitude)];
 
-                // Ensure marker position has valid coordinates
+            // Ensure marker position has valid coordinates
                 if (isNaN(markerPosition[0]) || isNaN(markerPosition[1])) {
                     console.error("Invalid coordinates for marker: ", markerPosition);
                     return;
@@ -185,22 +187,19 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                    <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
-                                                                    </svg>`,
+                                                                        <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
+                                                                        </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
-
                     position: markerPosition
                 });
 
-                // Add marker to the map
+             // Add marker to the map
                 map.markers.add(marker);
             });
 
-            // Optional: Check if the markers have been added
+            // Check if the markers have been added
             console.log("Markers added to the map: ", map.markers.getMarkers());
         });
     }
 </script>
-
-

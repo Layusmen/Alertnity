@@ -12,7 +12,7 @@ namespace Alertnity.ArchiveDataAnalysis
         public double Latitude { get; set; }
         public double Longitude { get; set; }
         public string CrimeType { get; set; }
-        public string LSOAName { get; set; } // New property for LSOA name
+        public string LSOAName { get; set; }
     }
 
 }

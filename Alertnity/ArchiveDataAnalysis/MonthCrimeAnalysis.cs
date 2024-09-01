@@ -48,8 +48,6 @@ namespace Alertnity.ArchiveDataAnalysis
                 return new Dictionary<string, int>();
             }
         }
-
-   
         private static DateTime GetSingleMonth()
         {
             DateTime singleMonthDate;

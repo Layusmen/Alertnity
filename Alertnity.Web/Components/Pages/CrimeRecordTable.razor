@@ -6,12 +6,12 @@
 @if (results != null && results.Any())
 {
     <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
-        <h2 class="text-center pt-4">Record of Crime for @FormInfo.Date.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h2>
+        <h2 class="text-center pt-4">Record of Crime for @FormInfo.Date?.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h2>
         <div class="mb-3">
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
         </div>
-        <Table @ref="@tableRef" FixedHeader FixedHeaderTableHeight="800px">
+        <Table  @ref="@tableRef" FixedHeader FixedHeaderTableHeight="800px"   >
             <TableHeader ThemeContrast="ThemeContrast.Dark">
                 <TableRow>
                     <TableHeaderCell>#</TableHeaderCell>

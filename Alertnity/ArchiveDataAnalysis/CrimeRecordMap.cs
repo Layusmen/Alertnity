@@ -16,6 +16,5 @@ namespace Alertnity.ArchiveDataAnalysis
             Map(m => m.CrimeType).Name("Crime type");
             Map(m => m.LSOAName).Name("LSOA name");
         }
-
     }
 }

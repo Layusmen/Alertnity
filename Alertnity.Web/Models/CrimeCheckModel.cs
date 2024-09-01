@@ -5,20 +5,16 @@ namespace Alertnity.Web.Models
 {
     public class CrimeCheckModel
     {
-        [Required]
+        [Required(ErrorMessage = "Postcode is required.")]
         public string Postcode { get; set; } = string.Empty;
 
         [Required(ErrorMessage = "Date is required.")]
-        [RegularExpression(@"\d{4}-\d{2}", ErrorMessage = "Date must be in the format YYYY-MM.")]
-        public string DateString { get; set; } = string.Empty;
+        public DateTime? Date { get; set; }
 
-        [Required]
-        public DateTime Date
+        public string GetDateString()
         {
-            get
-            {
-                return DateTime.ParseExact(DateString, "yyyy-MM", CultureInfo.InvariantCulture);
-            }
+            return Date?.ToString("yyyy-MM") ?? string.Empty;
         }
+
     }
 }

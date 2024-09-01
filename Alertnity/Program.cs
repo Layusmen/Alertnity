@@ -34,9 +34,6 @@ namespace Alertnity
 
             //
             Console.Read();
-
-
-
         }
 
     }

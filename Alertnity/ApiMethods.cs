@@ -99,20 +99,6 @@ namespace Alertnity
                     };
                     crimeInfos.Add(crimeInfo);
                 }
-
-                //foreach (var crime in crimeInfos)
-                //{
-                //    Console.WriteLine($"Category: {crime.category}");
-                //    Console.WriteLine($"Location Type: {crime.location?.street.Id}");
-                //    Console.WriteLine($"Location:");
-                //    Console.WriteLine($"\tLatitude: {crime.location?.latitude}");
-                //    Console.WriteLine($"\tLongitude: {crime.location?.longitude}");
-                //    Console.WriteLine($"\tStreet: {crime.location?.street.Name}");
-                //    Console.WriteLine($"Outcome Status: {crime.outcome_status?.Category}");
-                //    Console.WriteLine($"Month: {crime.outcome_status?.Month}");
-                    
-                //    Console.WriteLine("------------------");
-                //}
             }
             else
             {

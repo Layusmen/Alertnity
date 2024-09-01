@@ -67,7 +67,5 @@ namespace Alertnity
 
             return multipleUserInfo;
         }
-        
-        
     }
 }

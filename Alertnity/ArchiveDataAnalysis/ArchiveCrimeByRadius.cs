@@ -16,8 +16,8 @@ namespace Alertnity.ArchiveDataAnalysis
             double radiusMeters = 300.0;
 
             bool isSingleMonth = GetSearchType();
-            (DateTime startDateTime, DateTime endDateTime) = GetDateRange(isSingleMonth);
 
+            (DateTime startDateTime, DateTime endDateTime) = GetDateRange(isSingleMonth);
             var totalCrimeTypeCounts = new Dictionary<string, int>();
             int totalWithinRangeCount = 0;
 
@@ -74,7 +74,6 @@ namespace Alertnity.ArchiveDataAnalysis
             {
                 (startDateTime, endDateTime) = GetDateRange();
             }
-
             return (startDateTime, endDateTime);
         }
 
@@ -200,5 +199,4 @@ namespace Alertnity.ArchiveDataAnalysis
             Console.WriteLine($"Total number of longitude and latitude points within {radiusMeters} meters: {totalWithinRangeCount}");
         }
     }
-
 }
