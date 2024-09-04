@@ -1,8 +1,10 @@
 ﻿@page "/"
 @using Alertnity
+@using Alertnity.ArchiveDataAnalysis
 @using Alertnity.PoliceApi
 @using System.ComponentModel.DataAnnotations
 @using System.Globalization
+@using Alertnity.PostcodeApi
 @using Alertnity.Web.Models
 @inject IJSRuntime JSRuntime
 @using Blazorise;
@@ -11,9 +13,12 @@
 
 <div class="container mt-2 d-flex align-items-center justify-content-center">
     <EditForm Model="@FormInfo" OnValidSubmit="FormSubmitted">
+        <DataAnnotationsValidator />
+
         <div class="mb-3">
             <label for="postcode" class="form-label">Postcode</label>
             <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="FormInfo.Postcode" />
+            <ValidationMessage For="@(() => FormInfo.Postcode)" />
             <div class="form-text">
                 Please Insert Postcode in this format: PO148B
             </div>
@@ -22,7 +27,8 @@
         <div class="mb-3">
             <label for="date" class="form-label">Date To Check</label>
 
-            <InputDate  class="form-control" @bind-Value="FormInfo.Date" />
+            <InputDate class="form-control" @bind-Value="FormInfo.Date" />
+            <ValidationMessage For="@(() => FormInfo.Date)" />
             <div class="form-text">
                 Insert month in this format: YYYY-MM.
             </div>
@@ -33,7 +39,7 @@
 </div>
 
 <!-- Crime Map Display -->
-<CrimeMap/>
+<CrimeMap />
 
 @if (results != null && results.Any())
 {
@@ -44,27 +50,30 @@
 else
 {
     <div>
-        No Data Passed into the result
+        <h1>No Data Passed into the result. Check the APi, and make sure the date inserted is within the range</h1>
     </div>
-    Console.Write("No Data Passed into the result");
+
+    Console.Write("No Data Passed into the result. Check the APi, and make sure the date inserted is within the range");
 }
 
 @code {
     private CrimeCheckModel FormInfo = new CrimeCheckModel();
     private List<CrimeInfo> results = new();
+    private List<PostcodeConverter> apiResponse = new();
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
 
-    private async Task FormSubmitted()
-    { 
+    public async Task FormSubmitted()
+    {
         Console.WriteLine($"Submitted Postcode: {FormInfo.Postcode}");
         Console.WriteLine($"Submitted Date: {FormInfo.Date}");
 
-        if(FormInfo.Date.HasValue)
+        if (FormInfo.Date.HasValue)
         {
-            var monthYear = FormInfo.Date.Value.ToString("yyyy-MM");
-            Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
-            results = ApiMethods.CheckPostcodeCrimeRate(FormInfo.Postcode, FormInfo.Date.Value);
+            //var monthYear = FormInfo.Date.Value.ToString("yyyy-MM");
+            //Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
+            results = ApiMethods.CheckPostcodeCrimeRate
+            (FormInfo.Postcode, FormInfo.Date.Value);
         }
         else
         {
@@ -80,27 +89,35 @@ else
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
-                Count = results.Count(c => c.location.longitude == ci.location.longitude 
-                    && c.location.latitude == ci.location.latitude 
+                Count = results.Count(c => c.location.longitude == ci.location.longitude
+                    && c.location.latitude == ci.location.latitude
                     && ci.location.street.Name == ci.location.street.Name)
             }).ToList();
 
             await JSRuntime.InvokeVoidAsync("getMap", crimeData);
         }
-        else
+        else if (results == null)
         {
-            Console.WriteLine("Check the authenticity of the API addresses. Something is wrong somewhere");
+            // Insert Postcode and Date in the Archive Data Method,
+            // in case it is going to be used when the postcode API has no usable data
+            apiResponse = ArchiveCrimeByRadius.CheckArchiveData(FormInfo.Postcode, FormInfo.Date.Value);
+        }
+        else if (!results.Any())
+        {
+            Console.WriteLine("The results list is empty.");
+            // Optionally, you can also call the ArchiveCrimeByRadius method here
+            apiResponse = ArchiveCrimeByRadius.CheckArchiveData(FormInfo.Postcode, FormInfo.Date.Value);
         }
     }
 
-    private void CountCategories()
+    public void CountCategories()
     {
         categoryCounts = results
             .GroupBy(ci => ci.category)
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
-    private void CountStreets()
+    public void CountStreets()
     {
         streetCounts = results
             .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
@@ -112,7 +129,7 @@ else
                     Longitude = g.Key.longitude,
                     Crimes = string.Join(", ", g.Select(ci => ci.category)),
                     CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                         .ToDictionary(grp => grp.Key, grp => grp.Count())
+                                                     .ToDictionary(grp => grp.Key, grp => grp.Count())
                 })
             .ToList();
     }
@@ -177,7 +194,7 @@ else
             crimeData.forEach(function (crime) {
                 var markerPosition = [parseFloat(crime.longitude), parseFloat(crime.latitude)];
 
-            // Ensure marker position has valid coordinates
+                // Ensure marker position has valid coordinates
                 if (isNaN(markerPosition[0]) || isNaN(markerPosition[1])) {
                     console.error("Invalid coordinates for marker: ", markerPosition);
                     return;
@@ -187,14 +204,14 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                        <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
-                                                                        </svg>`,
+                                                                                    <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
+                                                                                    </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
                     position: markerPosition
                 });
 
-             // Add marker to the map
+                // Add marker to the map
                 map.markers.add(marker);
             });
 

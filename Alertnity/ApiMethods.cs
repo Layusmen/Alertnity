@@ -1,4 +1,5 @@
 ﻿using System;
+using System.Net;
 using System.Text.Json;
 using System.Text.Json.Serialization;
 using Alertnity.PoliceApi;
@@ -42,9 +43,7 @@ namespace Alertnity
                     Console.WriteLine("Longitude: " + result.Longitude);
                     Console.WriteLine("Latitude: " + result.Latitude);
                     Console.WriteLine("............................");
-
                 }
-
             }
             else
             {
@@ -66,14 +65,22 @@ namespace Alertnity
             {
                 var endpoint = new Uri(Url);
                 var result = client.GetAsync(endpoint).Result;
-
-                var json = result.Content.ReadAsStringAsync().Result;
-
-                var crimeIncidents = JsonSerializer.Deserialize<Outcome[]>(json, new JsonSerializerOptions
+                if(result.StatusCode == HttpStatusCode.OK)
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
-                });
-                return crimeIncidents;
+                    var json = result.Content.ReadAsStringAsync().Result;
+
+                    var crimeIncidents = JsonSerializer.Deserialize<Outcome[]>(json, new JsonSerializerOptions
+                    {
+                        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+                    });
+                    return crimeIncidents;
+                }
+                else
+                {
+
+                }
+
+                return null;
             }
         }
 
@@ -116,7 +123,7 @@ namespace Alertnity
             var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=600&limit=100";
             PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
 
-            //Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
+            //Now Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
 
             List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
 
