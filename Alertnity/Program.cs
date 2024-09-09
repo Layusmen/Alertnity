@@ -26,11 +26,11 @@ namespace Alertnity
 
 
             //Area
-            string directoryPath = @"C:\Users\ola\Desktop\Police";
-            double inputLatitude = 50.848409;
-            double inputLongitude = -1.088152;
+            //string directoryPath = @"C:\Users\ola\Desktop\Police";
+            //double inputLatitude = 50.848409;
+            //double inputLongitude = -1.088152;
 
-            var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, inputLatitude, inputLongitude);
+            //var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, Latitude, Longitude);
 
             //
             Console.Read();

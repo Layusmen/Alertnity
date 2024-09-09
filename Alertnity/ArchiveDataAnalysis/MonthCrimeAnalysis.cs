@@ -11,158 +11,164 @@ namespace Alertnity.ArchiveDataAnalysis
 {
     public class MonthCrimeAnalysis
     {
-        public static Dictionary<string, int> MonthCrimeCheckWithArchive(string directoryPath)
-        {
-            bool isSingleMonth = ArchiveCrimeByRadius.GetSearchType();
-            (DateTime startDateTime, DateTime endDateTime) = ArchiveCrimeByRadius.GetDateRange(isSingleMonth);
+        //public static Dictionary<string, int> MonthCrimeCheckWithArchive(string directoryPath)
+        //{
+        //    // Determine if the search is for a single month or a date range
+        //    bool isSingleMonth = ArchiveCrimeByRadius.GetSearchType();
+        //    (DateTime startDateTime, DateTime endDateTime) = ArchiveCrimeByRadius.GetDateRange(isSingleMonth);
 
-            string firstKeyword = "hampshire";
-            string secondKeyword = "street";
+        //    // Keywords for filtering files
+        //    string firstKeyword = "hampshire";
+        //    string secondKeyword = "street";
 
-            var totalCrimeTypeCounts = new Dictionary<string, int>();
+        //    var totalCrimeTypeCounts = new Dictionary<string, int>();
 
-            try
-            {
-                string[] subdirectories = Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories);
+        //    try
+        //    {
+        //        // Get all subdirectories within the specified directory
+        //        string[] subdirectories = Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories);
 
-                if (subdirectories.Length > 0)
-                {
-                    foreach (string subdirectory in subdirectories)
-                    {
-                        Console.WriteLine(subdirectory);
-                        ProcessSubdirectory(subdirectory, firstKeyword, secondKeyword, startDateTime, endDateTime, isSingleMonth, ref totalCrimeTypeCounts);
-                    }
+        //        if (subdirectories.Length > 0)
+        //        {
+        //            // Process each subdirectory
+        //            foreach (string subdirectory in subdirectories)
+        //            {
+        //                Console.WriteLine(subdirectory);
+        //                ProcessSubdirectory(subdirectory, firstKeyword, secondKeyword, startDateTime, endDateTime, isSingleMonth, ref totalCrimeTypeCounts);
+        //            }
 
-                    OutputCrimeTypeCounts(totalCrimeTypeCounts);
-                    return totalCrimeTypeCounts;
-                }
-                else
-                {
-                    Console.WriteLine("No subdirectories found.");
-                    return new Dictionary<string, int>();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error accessing directories: {ex.Message}");
-                return new Dictionary<string, int>();
-            }
-        }
-        private static DateTime GetSingleMonth()
-        {
-            DateTime singleMonthDate;
-            string singleMonth;
-            do
-            {
-                Console.Write("Please insert the month you want to search (e.g., 2013-01): ");
-                singleMonth = Console.ReadLine();
-            } while (!DateTime.TryParseExact(singleMonth, "yyyy-MM", null, DateTimeStyles.None, out singleMonthDate));
+        //            // Output results
+        //            OutputCrimeTypeCounts(totalCrimeTypeCounts);
+        //            return totalCrimeTypeCounts;
+        //        }
+        //        else
+        //        {
+        //            Console.WriteLine("No subdirectories found.");
+        //            return new Dictionary<string, int>();
+        //        }
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error accessing directories: {ex.Message}");
+        //        return new Dictionary<string, int>();
+        //    }
+        //}
 
-            return singleMonthDate;
-        }
+        //private static DateTime GetSingleMonth()
+        //{
+        //    DateTime singleMonthDate;
+        //    string singleMonth;
+        //    do
+        //    {
+        //        Console.Write("Please insert the month you want to search (e.g., 2013-01): ");
+        //        singleMonth = Console.ReadLine();
+        //    } while (!DateTime.TryParseExact(singleMonth, "yyyy-MM", null, DateTimeStyles.None, out singleMonthDate));
 
-        private static (DateTime, DateTime) GetDateRangeFromUser()
-        {
-            DateTime startDateTime, endDateTime;
+        //    return singleMonthDate;
+        //}
 
-            string startDate, endDate;
+        //private static (DateTime, DateTime) GetDateRangeFromUser()
+        //{
+        //    DateTime startDateTime, endDateTime;
 
-            do
-            {
-                Console.Write("Please insert the start date (YYYY-MM): ");
-                startDate = Console.ReadLine();
-            } while (!DateTime.TryParseExact(startDate, "yyyy-MM", null, DateTimeStyles.None, out startDateTime));
+        //    string startDate, endDate;
 
-            do
-            {
-                Console.Write("Please insert the end date (YYYY-MM): ");
-                endDate = Console.ReadLine();
-            } while (!DateTime.TryParseExact(endDate, "yyyy-MM", null, DateTimeStyles.None, out endDateTime) || endDateTime < startDateTime);
+        //    do
+        //    {
+        //        Console.Write("Please insert the start date (YYYY-MM): ");
+        //        startDate = Console.ReadLine();
+        //    } while (!DateTime.TryParseExact(startDate, "yyyy-MM", null, DateTimeStyles.None, out startDateTime));
 
-            return (startDateTime, endDateTime);
-        }
+        //    do
+        //    {
+        //        Console.Write("Please insert the end date (YYYY-MM): ");
+        //        endDate = Console.ReadLine();
+        //    } while (!DateTime.TryParseExact(endDate, "yyyy-MM", null, DateTimeStyles.None, out endDateTime) || endDateTime < startDateTime);
 
-        private static void ProcessSubdirectory(string subdirectory, string firstKeyword, string secondKeyword, DateTime startDateTime, DateTime endDateTime, bool isSingleMonth, ref Dictionary<string, int> totalCrimeTypeCounts)
-        {
-            string[] csvFiles = Directory.GetFiles(subdirectory, "*.csv");
+        //    return (startDateTime, endDateTime);
+        //}
 
-            foreach (string csvFile in csvFiles)
-            {
-                string fileName = Path.GetFileName(csvFile);
-                DateTime fileDate;
+        //private static void ProcessSubdirectory(string subdirectory, string firstKeyword, string secondKeyword, DateTime startDateTime, DateTime endDateTime, bool isSingleMonth, ref Dictionary<string, int> totalCrimeTypeCounts)
+        //{
+        //    string[] csvFiles = Directory.GetFiles(subdirectory, "*.csv");
 
-                if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
-                {
-                    if (ArchiveCrimeByRadius.IsFileInRange(fileName, firstKeyword, secondKeyword, fileDate, startDateTime, endDateTime, isSingleMonth))
-                    {
-                        Console.WriteLine($"Processing file: {csvFile}");
-                        ProcessCsvFile(csvFile, ref totalCrimeTypeCounts);
-                    }
-                }
-            }
-        }
+        //    foreach (string csvFile in csvFiles)
+        //    {
+        //        string fileName = Path.GetFileName(csvFile);
+        //        DateTime fileDate;
 
-        private static void ProcessCsvFile(string csvFile, ref Dictionary<string, int> totalCrimeTypeCounts)
-        {
-            try
-            {
-                var dataFrame = DataFrame.LoadCsv(csvFile);
+        //        if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
+        //        {
+        //            if (ArchiveCrimeByRadius.IsFileInRange(fileName, firstKeyword, secondKeyword, fileDate, startDateTime, endDateTime, isSingleMonth))
+        //            {
+        //                Console.WriteLine($"Processing file: {csvFile}");
+        //                ProcessCsvFile(csvFile, ref totalCrimeTypeCounts);
+        //            }
+        //        }
+        //    }
+        //}
 
-                if (!dataFrame.Columns.Any(column => column.Name == "Crime type"))
-                {
-                    Console.WriteLine("The column 'Crime type' does not exist in the DataFrame.");
-                    return;
-                }
+        //private static void ProcessCsvFile(string csvFile, ref Dictionary<string, int> totalCrimeTypeCounts)
+        //{
+        //    try
+        //    {
+        //        var dataFrame = DataFrame.LoadCsv(csvFile);
 
-                var crimeTypeCounts = new Dictionary<string, int>();
+        //        if (!dataFrame.Columns.Any(column => column.Name == "Crime type"))
+        //        {
+        //            Console.WriteLine("The column 'Crime type' does not exist in the DataFrame.");
+        //            return;
+        //        }
 
-                var crimeTypeColumn = dataFrame.Columns["Crime type"] as StringDataFrameColumn;
+        //        var crimeTypeCounts = new Dictionary<string, int>();
 
-                foreach (var row in dataFrame.Rows)
-                {
-                    var crimeType = row["Crime type"].ToString();
+        //        var crimeTypeColumn = dataFrame.Columns["Crime type"] as StringDataFrameColumn;
 
-                    if (crimeTypeCounts.ContainsKey(crimeType))
-                    {
-                        crimeTypeCounts[crimeType]++;
-                    }
-                    else
-                    {
-                        crimeTypeCounts[crimeType] = 1;
-                    }
-                }
+        //        foreach (var row in dataFrame.Rows)
+        //        {
+        //            var crimeType = row["Crime type"].ToString();
 
-                UpdateCrimeTypeCounts(ref totalCrimeTypeCounts, crimeTypeCounts);
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error reading file {csvFile}: {ex.Message}");
-            }
-        }
+        //            if (crimeTypeCounts.ContainsKey(crimeType))
+        //            {
+        //                crimeTypeCounts[crimeType]++;
+        //            }
+        //            else
+        //            {
+        //                crimeTypeCounts[crimeType] = 1;
+        //            }
+        //        }
 
-        private static void UpdateCrimeTypeCounts(ref Dictionary<string, int> totalCrimeTypeCounts, Dictionary<string, int> crimeTypeCounts)
-        {
-            foreach (var crimeTypeCount in crimeTypeCounts)
-            {
-                if (totalCrimeTypeCounts.ContainsKey(crimeTypeCount.Key))
-                {
-                    totalCrimeTypeCounts[crimeTypeCount.Key] += crimeTypeCount.Value;
-                }
-                else
-                {
-                    totalCrimeTypeCounts[crimeTypeCount.Key] = crimeTypeCount.Value;
-                }
-            }
-        }
+        //        UpdateCrimeTypeCounts(ref totalCrimeTypeCounts, crimeTypeCounts);
+        //    }
+        //    catch (Exception ex)
+        //    {
+        //        Console.WriteLine($"Error reading file {csvFile}: {ex.Message}");
+        //    }
+        //}
 
-        private static void OutputCrimeTypeCounts(Dictionary<string, int> totalCrimeTypeCounts)
-        {
-            Console.WriteLine("Aggregated Crime Type Counts:");
-            foreach (var crimeTypeCount in totalCrimeTypeCounts)
-            {
-                Console.WriteLine($"{crimeTypeCount.Key}: {crimeTypeCount.Value}");
-            }
-        }
+        //private static void UpdateCrimeTypeCounts(ref Dictionary<string, int> totalCrimeTypeCounts, Dictionary<string, int> crimeTypeCounts)
+        //{
+        //    foreach (var crimeTypeCount in crimeTypeCounts)
+        //    {
+        //        if (totalCrimeTypeCounts.ContainsKey(crimeTypeCount.Key))
+        //        {
+        //            totalCrimeTypeCounts[crimeTypeCount.Key] += crimeTypeCount.Value;
+        //        }
+        //        else
+        //        {
+        //            totalCrimeTypeCounts[crimeTypeCount.Key] = crimeTypeCount.Value;
+        //        }
+        //    }
+        //}
+
+        //private static void OutputCrimeTypeCounts(Dictionary<string, int> totalCrimeTypeCounts)
+        //{
+        //    Console.WriteLine("Aggregated Crime Type Counts:");
+        //    foreach (var crimeTypeCount in totalCrimeTypeCounts)
+        //    {
+        //        Console.WriteLine($"{crimeTypeCount.Key}: {crimeTypeCount.Value}");
+        //    }
+        //}
 
     }
 }

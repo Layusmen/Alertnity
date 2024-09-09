@@ -12,13 +12,12 @@
 <h1 class="container mt-2 d-flex align-items-center justify-content-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
 <div class="container mt-2 d-flex align-items-center justify-content-center">
-    <EditForm Model="@FormInfo" OnValidSubmit="FormSubmitted">
+    <EditForm Model="@formInfo" OnValidSubmit="FormSubmitted">
         <DataAnnotationsValidator />
-
         <div class="mb-3">
             <label for="postcode" class="form-label">Postcode</label>
-            <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="FormInfo.Postcode" />
-            <ValidationMessage For="@(() => FormInfo.Postcode)" />
+            <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="formInfo.Postcode" />
+            <ValidationMessage For="@(() => formInfo.Postcode)" />
             <div class="form-text">
                 Please Insert Postcode in this format: PO148B
             </div>
@@ -27,13 +26,12 @@
         <div class="mb-3">
             <label for="date" class="form-label">Date To Check</label>
 
-            <InputDate class="form-control" @bind-Value="FormInfo.Date" />
-            <ValidationMessage For="@(() => FormInfo.Date)" />
+            <InputDate class="form-control" @bind-Value="formInfo.Date" />
+            <ValidationMessage For="@(() => formInfo.Date)" />
             <div class="form-text">
                 Insert month in this format: YYYY-MM.
             </div>
         </div>
-
         <button type="submit" class="btn btn-primary">Submit</button>
     </EditForm>
 </div>
@@ -41,11 +39,11 @@
 <!-- Crime Map Display -->
 <CrimeMap />
 
-@if (results != null && results.Any())
+@if (crimeResults.Count != null && crimeResults.Any())
 {
     <CategoryCountTable categoryCounts="@categoryCounts" />
     <StreetCountTable streetCounts="@streetCounts" />
-    <CrimeRecordTable results="@results" FormInfo="@FormInfo" />
+    <CrimeRecordTable results="@crimeResults" FormInfo="@formInfo" />
 }
 else
 {
@@ -57,69 +55,76 @@ else
 }
 
 @code {
-    private CrimeCheckModel FormInfo = new CrimeCheckModel();
-    private List<CrimeInfo> results = new();
-    private List<PostcodeConverter> apiResponse = new();
+    
+    private CrimeCheckModel formInfo = new CrimeCheckModel();
+    private List<CrimeInfo> crimeResults = new();
+    private PostcodeConverter converter = new();
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
 
+
     public async Task FormSubmitted()
     {
-        Console.WriteLine($"Submitted Postcode: {FormInfo.Postcode}");
-        Console.WriteLine($"Submitted Date: {FormInfo.Date}");
+        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
+        Console.WriteLine($"Submitted Date: {formInfo.Date}");
 
-        if (FormInfo.Date.HasValue)
+        if (formInfo.Date.HasValue)
         {
-            //var monthYear = FormInfo.Date.Value.ToString("yyyy-MM");
-            //Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
-            results = ApiMethods.CheckPostcodeCrimeRate
-            (FormInfo.Postcode, FormInfo.Date.Value);
+            var monthYear = formInfo.Date.Value.ToString("yyyy-MM");
+            Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
+            crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, formInfo.Date.Value);
         }
         else
         {
             Console.WriteLine("Date is not picked");
         }
 
-        if (results != null && results.Any())
+
+
+        if (crimeResults.Count != null && crimeResults.Any())
         {
+            
             CountCategories();
             CountStreets();
-            var crimeData = results.Select(ci => new
+            
+            
+            var crimeData = crimeResults.Select(ci => new
             {
+            
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
-                Count = results.Count(c => c.location.longitude == ci.location.longitude
+                Count = crimeResults.Count(c => c.location.longitude == ci.location.longitude
                     && c.location.latitude == ci.location.latitude
                     && ci.location.street.Name == ci.location.street.Name)
             }).ToList();
-
             await JSRuntime.InvokeVoidAsync("getMap", crimeData);
         }
-        else if (results == null)
+        else if (crimeResults == null || !crimeResults.Any())
         {
             // Insert Postcode and Date in the Archive Data Method,
-            // in case it is going to be used when the postcode API has no usable data
-            apiResponse = ArchiveCrimeByRadius.CheckArchiveData(FormInfo.Postcode, FormInfo.Date.Value);
+            // return PostcodeConverter to get Longitude, Latitude and Admin_District
+            converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
+
+            string directoryPath = @"C:\Users\ola\Desktop\text";
+            var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, converter, formInfo.Date.Value);
         }
-        else if (!results.Any())
+        else
         {
             Console.WriteLine("The results list is empty.");
-            // Optionally, you can also call the ArchiveCrimeByRadius method here
-            apiResponse = ArchiveCrimeByRadius.CheckArchiveData(FormInfo.Postcode, FormInfo.Date.Value);
         }
     }
 
     public void CountCategories()
     {
-        categoryCounts = results
+        categoryCounts = crimeResults
             .GroupBy(ci => ci.category)
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
     public void CountStreets()
     {
-        streetCounts = results
+        streetCounts = crimeResults
             .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
             .Select(g => new StreetCrimeData
                 {

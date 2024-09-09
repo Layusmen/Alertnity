@@ -10,75 +10,87 @@ using Alertnity.PostcodeApi;
 using Alertnity.PoliceApi;
 using Blazorise.Utilities;
 using System.Text.Json;
+using CsvHelper.TypeConversion;
 
 namespace Alertnity.ArchiveDataAnalysis
 {
     public static class ArchiveCrimeByRadius
     {
-        public static List<PostcodeConverter> CheckArchiveData(string insertPostcode, DateTime date)
+        public static PostcodeConverter GetPostcodeForArchiveData(string insertPostcode)
         {
+            // URL for the API request
+            var url = $"https://api.postcodes.io/postcodes/{insertPostcode}";
 
-            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}";
-            PostcodeApiResponse postcodeApiResponseValue = null;
-            using (var client = new HttpClient())
+            // API response
+            Result postcodeApiResponseValue = null;
+
+            // converter to store the results
+            PostcodeConverter converter = new PostcodeConverter();
+
+            try
             {
-                var endpoint = new Uri(Url);
-                var result = client.GetAsync(endpoint).Result;
-                var json = result.Content.ReadAsStringAsync().Result;
-                postcodeApiResponseValue = JsonSerializer.Deserialize<PostcodeApiResponse>(json, new JsonSerializerOptions
+                // HttpClient to make the API request
+                using (var client = new HttpClient())
                 {
-                    PropertyNamingPolicy = JsonNamingPolicy.CamelCase
-                });
+                    var endpoint = new Uri(url);
+                    var result = client.GetAsync(endpoint).Result;
 
-            }
-
-
-            //PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
-
-
-            List<PostcodeConverter> converters = new List<PostcodeConverter>();
-
-            if (postcodeApiResponseValue != null && postcodeApiResponseValue.Result != null)
-            {
-                foreach (var result in postcodeApiResponseValue.Result)
-                {
-                    PostcodeConverter converter = new PostcodeConverter
+                    // Ensure the request was successful
+                    if (result.IsSuccessStatusCode)
                     {
-                        Latitude = result.Latitude,
-                        Longitude = result.Longitude
-                    };
-                    converters.Add(converter);
+                        var json = result.Content.ReadAsStringAsync().Result;
 
-                    Console.WriteLine("Longitude: " + result.Longitude);
-                    Console.WriteLine("Latitude: " + result.Latitude);
-                    Console.WriteLine("............................");
+                        // Output the raw JSON for inspection
+                        Console.WriteLine("Raw JSON Response:");
+                        Console.WriteLine(json);
 
+
+                        var Root = JsonSerializer.Deserialize<Root>(json, new JsonSerializerOptions
+                        {
+                            PropertyNamingPolicy = JsonNamingPolicy.CamelCase
+                        });
+                        postcodeApiResponseValue = Root?.result;
+
+
+                        converter.Latitude = postcodeApiResponseValue.latitude;
+                        converter.Longitude = postcodeApiResponseValue.longitude;
+                        converter.PFA = postcodeApiResponseValue.pfa;
+
+                        Console.WriteLine($"Latitude: {postcodeApiResponseValue?.latitude}");
+                        Console.WriteLine($"Longitude: {postcodeApiResponseValue?.longitude}");
+                        Console.WriteLine($"PFA: {postcodeApiResponseValue?.pfa}");
+                    }
+                    else
+                    {
+                        Console.WriteLine($"API request failed with status code: {result.StatusCode}");
+                        return converter;
+                    }
                 }
-
             }
-            else
+            catch (Exception ex)
             {
-                Console.WriteLine("Response is null or nothing contained in the Archive Data.");
+                Console.WriteLine($"An error occurred while making the API request: {ex.Message}");
+                return converter;  // Return an empty converter if an error occurs
             }
-            //Area
-            string directoryPath = @"C:\Users\ola\Desktop\Police";
-            double inputLatitude = converters[0].Latitude;
-            double inputLongitude = converters[0].Longitude;
-            var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, inputLatitude, inputLongitude);
-            return converters;
+
+            return converter;
         }
-        public static Dictionary<string, int> CoordinateCrimeCheckFromArchive(string directoryPath, double inputLatitude, double inputLongitude)
+
+
+        public static Dictionary<string, int> CoordinateCrimeCheckFromArchive(
+    string directoryPath, PostcodeConverter converter, DateTime startDateTime, DateTime? endDateTime = null)
         {
             double radiusMeters = 300.0;
 
-            bool isSingleMonth = GetSearchType();
+            // Use startDateTime as both start and end date if endDateTime is null
+            DateTime actualEndDate = endDateTime ?? new DateTime(startDateTime.Year, startDateTime.Month, DateTime.DaysInMonth(startDateTime.Year, startDateTime.Month));
 
-            (DateTime startDateTime, DateTime endDateTime) = GetDateRange(isSingleMonth);
             var totalCrimeTypeCounts = new Dictionary<string, int>();
             int totalWithinRangeCount = 0;
-
-            string firstKeyword = "hampshire";
-            string secondKeyword = "street";
+            double? latitude = converter.Latitude;
+            double? longitude = converter.Longitude;
+            string? adminDistrict = converter.PFA;
+            string removeKeyword = "street";
 
             try
             {
@@ -89,7 +101,8 @@ namespace Alertnity.ArchiveDataAnalysis
                     foreach (string subdirectory in subdirectories)
                     {
                         Console.WriteLine(subdirectory);
-                        ProcessSubdirectory(subdirectory, firstKeyword, secondKeyword, startDateTime, endDateTime, isSingleMonth, inputLatitude, inputLongitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
+                        ProcessSubdirectory(subdirectory, adminDistrict, removeKeyword, startDateTime, actualEndDate,
+                            (double)latitude, (double)longitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
                     }
 
                     OutputResults(totalCrimeTypeCounts, totalWithinRangeCount, radiusMeters);
@@ -107,68 +120,17 @@ namespace Alertnity.ArchiveDataAnalysis
                 return new Dictionary<string, int>();
             }
         }
-
-        public static bool GetSearchType()
-        {
-            Console.WriteLine("Do you want to search by a single month or a date range?");
-            Console.WriteLine("1. Single Month");
-            Console.WriteLine("2. Date Range");
-            string searchType = Console.ReadLine();
-            return searchType == "1";
-        }
-
-        public static (DateTime, DateTime) GetDateRange(bool isSingleMonth)
-        {
-            DateTime startDateTime, endDateTime;
-
-            if (isSingleMonth)
-            {
-                startDateTime = GetSingleMonth();
-                endDateTime = startDateTime;
-            }
-            else
-            {
-                (startDateTime, endDateTime) = GetDateRange();
-            }
-            return (startDateTime, endDateTime);
-        }
-
-        private static DateTime GetSingleMonth()
-        {
-            DateTime singleMonthDate;
-            string singleMonth;
-            do
-            {
-                Console.Write("Please insert the month to search (e.g., 2013-01): ");
-                singleMonth = Console.ReadLine();
-            } while (!DateTime.TryParseExact(singleMonth, "yyyy-MM", null, DateTimeStyles.None, out singleMonthDate));
-
-            return singleMonthDate;
-        }
-
-        private static (DateTime, DateTime) GetDateRange()
-        {
-            DateTime startDateTime, endDateTime;
-
-            string startDate, endDate;
-
-            do
-            {
-                Console.Write("Insert the start date (YYYY-MM): ");
-                startDate = Console.ReadLine();
-            }
-            while (!DateTime.TryParseExact(startDate, "yyyy-MM", null, DateTimeStyles.None, out startDateTime));
-
-            do
-            {
-                Console.Write("Insert the end date (YYYY-MM): ");
-                endDate = Console.ReadLine();
-            } while (!DateTime.TryParseExact(endDate, "yyyy-MM", null, DateTimeStyles.None, out endDateTime) || endDateTime < startDateTime);
-
-            return (startDateTime, endDateTime);
-        }
-
-        private static void ProcessSubdirectory(string subdirectory, string firstKeyword, string secondKeyword, DateTime startDateTime, DateTime endDateTime, bool isSingleMonth, double inputLatitude, double inputLongitude, double radiusMeters, ref int totalWithinRangeCount, ref Dictionary<string, int> totalCrimeTypeCounts)
+        private static void ProcessSubdirectory(
+    string subdirectory,
+    string adminDistrict,
+    string secondKeyword,
+    DateTime startDateTime,
+    DateTime endDateTime,
+    double Latitude,
+    double Longitude,
+    double radiusMeters,
+    ref int totalWithinRangeCount,
+    ref Dictionary<string, int> totalCrimeTypeCounts)
         {
             string[] csvFiles = Directory.GetFiles(subdirectory, "*.csv");
 
@@ -177,26 +139,52 @@ namespace Alertnity.ArchiveDataAnalysis
                 string fileName = Path.GetFileName(csvFile);
                 DateTime fileDate;
 
+                // Parse the file date from the file name
                 if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
                 {
-                    if (IsFileInRange(fileName, firstKeyword, secondKeyword, fileDate, startDateTime, endDateTime, isSingleMonth))
+                    // Check if the file falls within the date range and matches keywords
+                    if (IsFileInRange(fileName, adminDistrict, secondKeyword, fileDate, startDateTime, endDateTime))
                     {
                         Console.WriteLine($"Processing file: {csvFile}");
-                        ProcessCsvFile(csvFile, inputLatitude, inputLongitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
+
+                        // Process the CSV file if it matches the range and keywords
+                        ProcessCsvFile(csvFile, Latitude, Longitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
                     }
                 }
             }
         }
 
-        public static bool IsFileInRange(string fileName, string firstKeyword, string secondKeyword, DateTime fileDate, DateTime startDateTime, DateTime endDateTime, bool isSingleMonth)
+        public static bool IsFileInRange(string fileName, string adminDistrict, string secondKeyword, DateTime fileDate, DateTime startDateTime, DateTime endDateTime)
         {
-            return (isSingleMonth ? fileDate == startDateTime : fileDate >= startDateTime && fileDate <= endDateTime) &&
-                   fileName.Contains(firstKeyword, StringComparison.OrdinalIgnoreCase) &&
-                   fileName.Contains(secondKeyword, StringComparison.OrdinalIgnoreCase);
+            // Compare only year and month
+            bool isDateInRange = (fileDate.Year > startDateTime.Year ||
+                                 (fileDate.Year == startDateTime.Year && fileDate.Month >= startDateTime.Month)) &&
+                                 (fileDate.Year < endDateTime.Year ||
+                                 (fileDate.Year == endDateTime.Year && fileDate.Month <= endDateTime.Month));
+
+            Console.WriteLine($"File: {fileName} | File Date: {fileDate:yyyy-MM} | Range: {startDateTime:yyyy-MM} - {endDateTime:yyyy-MM} | Is Date In Range: {isDateInRange}");
+
+            bool containsAdminDistrict = string.IsNullOrEmpty(adminDistrict) || fileName.Contains(adminDistrict, StringComparison.OrdinalIgnoreCase);
+            bool containsSecondKeyword = string.IsNullOrEmpty(secondKeyword) || fileName.Contains(secondKeyword, StringComparison.OrdinalIgnoreCase);
+
+            return isDateInRange && containsAdminDistrict && containsSecondKeyword;
         }
 
-        private static void ProcessCsvFile(string csvFile, double inputLatitude, double inputLongitude, double radiusMeters, ref int totalWithinRangeCount, ref Dictionary<string, int> totalCrimeTypeCounts)
+        public class SafeDoubleConverter : DoubleConverter
+        {
+            public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+            {
+                // If the field is empty or whitespace, return 0.0 (or any default value)
+                if (string.IsNullOrWhiteSpace(text))
+                {
+                    return 0.0;
+                }
 
+                // Otherwise, convert the text to double
+                return base.ConvertFromString(text, row, memberMapData);
+            }
+        }
+        private static void ProcessCsvFile(string csvFile, double Latitude, double Longitude, double radiusMeters, ref int totalWithinRangeCount, ref Dictionary<string, int> totalCrimeTypeCounts)
         {
             try
             {
@@ -208,20 +196,19 @@ namespace Alertnity.ArchiveDataAnalysis
                 }))
                 {
                     csv.Context.RegisterClassMap<CrimeRecordMap>();
-                    var records = csv.GetRecords<CrimeRecord>().ToList();
+                    // check records having no or invalid  coordinates
+                    var records = csv.GetRecords<CrimeRecord>()
+                                     .Where(r => r.Latitude != 0.0 && r.Longitude != 0.0) 
+                                     .ToList();
 
-                    var lsoaRecords = records.Where(r => r.LSOAName != null && r.LSOAName.Contains("Portsmouth", StringComparison.OrdinalIgnoreCase));
-
-                    foreach (var record in lsoaRecords)
+                    foreach (var record in records)
                     {
-                        double distance = GeoCalculator.HaversineDistance(inputLatitude, inputLongitude, record.Latitude, record.Longitude);
-                        Console.WriteLine($"Distance to record: {distance} meters");
-
+                        double distance = GeoCalculator.HaversineDistance(Latitude, Longitude, record.Latitude, record.Longitude);
                         if (distance <= radiusMeters)
                         {
-                            Console.WriteLine($"Within Range -> Latitude: {record.Latitude}, Longitude: {record.Longitude}, Distance: {distance} meters");
                             totalWithinRangeCount++;
                             UpdateCrimeTypeCounts(ref totalCrimeTypeCounts, record.CrimeType);
+                            
                         }
                     }
                 }

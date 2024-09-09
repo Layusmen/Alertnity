@@ -35,13 +35,13 @@ namespace Alertnity
                 {
                     PostcodeConverter converter = new PostcodeConverter
                     {
-                        Latitude = result.Latitude,
-                        Longitude = result.Longitude
+                        Latitude = result.latitude,
+                        Longitude = result.longitude
                     };
                     converters.Add(converter);
 
-                    Console.WriteLine("Longitude: " + result.Longitude);
-                    Console.WriteLine("Latitude: " + result.Latitude);
+                    Console.WriteLine("Longitude: " + result.longitude);
+                    Console.WriteLine("Latitude: " + result.latitude);
                     Console.WriteLine("............................");
                 }
             }
