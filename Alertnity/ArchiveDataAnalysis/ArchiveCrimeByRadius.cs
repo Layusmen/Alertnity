@@ -1,7 +1,7 @@
 ﻿using CsvHelper.Configuration;
 using CsvHelper;
 using System;
-using System.Collections.Generic;
+//using System.Collections.Generic;
 using System.Globalization;
 using System.Linq;
 using System.Text;
@@ -35,7 +35,7 @@ namespace Alertnity.ArchiveDataAnalysis
                     var endpoint = new Uri(url);
                     var result = client.GetAsync(endpoint).Result;
 
-                    // Ensure the request was successful
+                    // Check successful request
                     if (result.IsSuccessStatusCode)
                     {
                         var json = result.Content.ReadAsStringAsync().Result;
@@ -70,90 +70,11 @@ namespace Alertnity.ArchiveDataAnalysis
             catch (Exception ex)
             {
                 Console.WriteLine($"An error occurred while making the API request: {ex.Message}");
-                return converter;  // Return an empty converter if an error occurs
+                return converter;
             }
 
             return converter;
         }
-
-
-        public static Dictionary<string, int> CoordinateCrimeCheckFromArchive(
-    string directoryPath, PostcodeConverter converter, DateTime startDateTime, DateTime? endDateTime = null)
-        {
-            double radiusMeters = 300.0;
-
-            // Use startDateTime as both start and end date if endDateTime is null
-            DateTime actualEndDate = endDateTime ?? new DateTime(startDateTime.Year, startDateTime.Month, DateTime.DaysInMonth(startDateTime.Year, startDateTime.Month));
-
-            var totalCrimeTypeCounts = new Dictionary<string, int>();
-            int totalWithinRangeCount = 0;
-            double? latitude = converter.Latitude;
-            double? longitude = converter.Longitude;
-            string? adminDistrict = converter.PFA;
-            string removeKeyword = "street";
-
-            try
-            {
-                string[] subdirectories = Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories);
-
-                if (subdirectories.Length > 0)
-                {
-                    foreach (string subdirectory in subdirectories)
-                    {
-                        Console.WriteLine(subdirectory);
-                        ProcessSubdirectory(subdirectory, adminDistrict, removeKeyword, startDateTime, actualEndDate,
-                            (double)latitude, (double)longitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
-                    }
-
-                    OutputResults(totalCrimeTypeCounts, totalWithinRangeCount, radiusMeters);
-                    return totalCrimeTypeCounts;
-                }
-                else
-                {
-                    Console.WriteLine("No subdirectories found.");
-                    return new Dictionary<string, int>();
-                }
-            }
-            catch (Exception ex)
-            {
-                Console.WriteLine($"Error accessing directories: {ex.Message}");
-                return new Dictionary<string, int>();
-            }
-        }
-        private static void ProcessSubdirectory(
-    string subdirectory,
-    string adminDistrict,
-    string secondKeyword,
-    DateTime startDateTime,
-    DateTime endDateTime,
-    double Latitude,
-    double Longitude,
-    double radiusMeters,
-    ref int totalWithinRangeCount,
-    ref Dictionary<string, int> totalCrimeTypeCounts)
-        {
-            string[] csvFiles = Directory.GetFiles(subdirectory, "*.csv");
-
-            foreach (string csvFile in csvFiles)
-            {
-                string fileName = Path.GetFileName(csvFile);
-                DateTime fileDate;
-
-                // Parse the file date from the file name
-                if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
-                {
-                    // Check if the file falls within the date range and matches keywords
-                    if (IsFileInRange(fileName, adminDistrict, secondKeyword, fileDate, startDateTime, endDateTime))
-                    {
-                        Console.WriteLine($"Processing file: {csvFile}");
-
-                        // Process the CSV file if it matches the range and keywords
-                        ProcessCsvFile(csvFile, Latitude, Longitude, radiusMeters, ref totalWithinRangeCount, ref totalCrimeTypeCounts);
-                    }
-                }
-            }
-        }
-
         public static bool IsFileInRange(string fileName, string adminDistrict, string secondKeyword, DateTime fileDate, DateTime startDateTime, DateTime endDateTime)
         {
             // Compare only year and month
@@ -170,76 +91,89 @@ namespace Alertnity.ArchiveDataAnalysis
             return isDateInRange && containsAdminDistrict && containsSecondKeyword;
         }
 
-        public class SafeDoubleConverter : DoubleConverter
+        public static List<CrimeRecord> ProcessDirectory(PostcodeConverter converter, string directoryPath, DateTime startDateTime, DateTime? endDateTime = null)
         {
-            public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
-            {
-                // If the field is empty or whitespace, return 0.0 (or any default value)
-                if (string.IsNullOrWhiteSpace(text))
-                {
-                    return 0.0;
-                }
+            double radiusMeters = 300.0;
+            double Latitude = converter.Latitude;
+            double Longitude = converter.Longitude;
+            string? adminDistrict = converter.PFA;
+            string secondKeyword = "street";
 
-                // Otherwise, convert the text to double
-                return base.ConvertFromString(text, row, memberMapData);
-            }
-        }
-        private static void ProcessCsvFile(string csvFile, double Latitude, double Longitude, double radiusMeters, ref int totalWithinRangeCount, ref Dictionary<string, int> totalCrimeTypeCounts)
-        {
+            int year = startDateTime.Year;
+            int month = startDateTime.Month;
+            int lastDay = DateTime.DaysInMonth(year, month);
+            DateTime actualEndDate = endDateTime ?? new DateTime(year, month, lastDay);
+            List<CrimeRecord> outputRecords = new();
             try
             {
-                using (var reader = new StreamReader(csvFile))
-                using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
-                {
-                    HeaderValidated = null,
-                    MissingFieldFound = null,
-                }))
-                {
-                    csv.Context.RegisterClassMap<CrimeRecordMap>();
-                    // check records having no or invalid  coordinates
-                    var records = csv.GetRecords<CrimeRecord>()
-                                     .Where(r => r.Latitude != 0.0 && r.Longitude != 0.0) 
-                                     .ToList();
+                string[] subdirectories = Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories);
 
-                    foreach (var record in records)
+                if (subdirectories.Length > 0)
+                {
+                    foreach (string subdirectory in subdirectories)
                     {
-                        double distance = GeoCalculator.HaversineDistance(Latitude, Longitude, record.Latitude, record.Longitude);
-                        if (distance <= radiusMeters)
+                        Console.WriteLine(subdirectory);
+                        string[] csvFiles = Directory.GetFiles(subdirectory, "*.csv");
+                        foreach (string csvFile in csvFiles)
                         {
-                            totalWithinRangeCount++;
-                            UpdateCrimeTypeCounts(ref totalCrimeTypeCounts, record.CrimeType);
-                            
+                            string fileName = Path.GetFileName(csvFile);
+                            DateTime fileDate;
+
+                            // Parse the file date from the file name
+                            if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
+                            {
+                                // Check if the file is in the date range and matche keywords
+                                if (ArchiveCrimeByRadius.IsFileInRange(fileName, adminDistrict, secondKeyword, fileDate, startDateTime, actualEndDate))
+                                {
+                                    Console.WriteLine($"Processing file: {csvFile}");
+
+                                    // Process the CSV file if it matches the range and keywords
+                                    try
+                                    {
+                                        using (var reader = new StreamReader(csvFile))
+                                        using (var csv = new CsvReader(reader, new CsvConfiguration(CultureInfo.InvariantCulture)
+                                        {
+                                            HeaderValidated = null,
+                                            MissingFieldFound = null,
+                                        }))
+                                        {
+
+                                            // See if records is having no or invalid  coordinates
+                                            var records = csv.GetRecords<CrimeRecord>()
+                                                             .Where(r => r.Latitude != 0.0 && r.Longitude != 0.0);
+
+                                            foreach (var record in records)
+                                            {
+                                                double distance = GeoCalculator.HaversineDistance(Latitude, Longitude, record.Latitude, record.Longitude);
+                                                if (distance <= radiusMeters)
+                                                {
+                                                    outputRecords.Add(record);
+                                                    Console.WriteLine(distance);
+                                                }
+                                            }
+                                        }
+                                    }
+                                    catch (Exception ex)
+                                    {
+                                        Console.WriteLine($"Error reading file {csvFile}: {ex.Message}");
+                                    }
+                                }
+                            }
                         }
                     }
+                }
+                else
+                {
+                    Console.WriteLine("No subdirectories found.");
                 }
             }
             catch (Exception ex)
             {
-                Console.WriteLine($"Error reading file {csvFile}: {ex.Message}");
+                Console.WriteLine($"Error accessing directories: {ex.Message}");
+
             }
+            return outputRecords;
         }
 
-        private static void UpdateCrimeTypeCounts(ref Dictionary<string, int> crimeTypeCounts, string crimeType)
-        {
-            if (crimeTypeCounts.ContainsKey(crimeType))
-            {
-                crimeTypeCounts[crimeType]++;
-            }
-            else
-            {
-                crimeTypeCounts[crimeType] = 1;
-            }
-        }
-
-        private static void OutputResults(Dictionary<string, int> totalCrimeTypeCounts, int totalWithinRangeCount, double radiusMeters)
-        {
-            Console.WriteLine("Aggregated Crime Type Counts:");
-            foreach (var crimeTypeCount in totalCrimeTypeCounts)
-            {
-                Console.WriteLine($"{crimeTypeCount.Key}: {crimeTypeCount.Value}");
-            }
-
-            Console.WriteLine($"Total number of longitude and latitude points within {radiusMeters} meters: {totalWithinRangeCount}");
-        }
     }
 }

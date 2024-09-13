@@ -1,17 +1,20 @@
+@using Alertnity.ArchiveDataAnalysis
 @using Alertnity.PoliceApi
 @using Alertnity.Web.Models
 @using Blazorise
 
 
-@if (results != null && results.Any())
+@if ((results != null && results.Any()) || (archiveDataResult != null && archiveDataResult.Any()))
 {
     <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
         <h2 class="text-center pt-4">Record of Crime for @FormInfo.Date?.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h2>
+
         <div class="mb-3">
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
         </div>
-        <Table  @ref="@tableRef" FixedHeader FixedHeaderTableHeight="800px"   >
+
+        <Table @ref="@tableRef" FixedHeader FixedHeaderTableHeight="800px">
             <TableHeader ThemeContrast="ThemeContrast.Dark">
                 <TableRow>
                     <TableHeaderCell>#</TableHeaderCell>
@@ -22,38 +25,64 @@
                     <TableHeaderCell>Crime Street</TableHeaderCell>
                 </TableRow>
             </TableHeader>
-            @foreach (var (index, ci) in results.Select((ci, index) => (index, ci)))
+
+            @if (results != null && results.Any())
             {
-                <TableBody>
-                    <TableRow>
-                        <TableRowHeader>@(index + 1)</TableRowHeader>
-                        <TableRowCell>@ci.category</TableRowCell>
-                        <TableRowCell>@ci.outcome_status?.Category</TableRowCell>
-                        <TableRowCell>@ci.location?.latitude</TableRowCell>
-                        <TableRowCell>@ci.location?.longitude</TableRowCell>
-                        <TableRowCell>@ci.location?.street.Name</TableRowCell>
-                    </TableRow>
-                </TableBody>
+                @foreach (var (index, ci) in results.Select((ci, index) => (index, ci)))
+                {
+                    <TableBody>
+                        <TableRow>
+                            <TableRowHeader>@(index + 1)</TableRowHeader>
+                            <TableRowCell>@ci.category</TableRowCell>
+                            <TableRowCell>@ci.outcome_status?.Category</TableRowCell>
+                            <TableRowCell>@ci.location?.latitude</TableRowCell>
+                            <TableRowCell>@ci.location?.longitude</TableRowCell>
+                            <TableRowCell>@ci.location?.street.Name</TableRowCell>
+                        </TableRow>
+                    </TableBody>
+                }
+            }
+            @if (archiveDataResult != null && archiveDataResult.Any())
+            {
+                @foreach (var (index, ci) in archiveDataResult.Select((ci, index) => (index, ci)))
+                {
+                    <TableBody>
+                        <TableRow>
+                            <TableRowHeader>@(index + 1)</TableRowHeader>
+                            <TableRowCell>@ci.CrimeType</TableRowCell>
+                            <TableRowCell>@ci.outcome_status</TableRowCell>
+                            <TableRowCell>@ci.Latitude</TableRowCell>
+                            <TableRowCell>@ci.Longitude</TableRowCell>
+                            <TableRowCell>@ci.Street</TableRowCell>
+                        </TableRow>
+                    </TableBody>
+                }
             }
         </Table>
     </div>
+
     <div class="m-3">
-        <p>Total number of Crimes Recorded for the whole Month: @results.Count</p>
+        <p>Total number of Crimes Recorded for the whole Month: @(results?.Count ?? archiveDataResult?.Count)</p>
         <p>Date Searched: @DateTime.Now.ToString("MMMM yyyy")</p>
     </div>
 }
 else
 {
-    Console.Write("No Data Passed for Crime Table Count");
+    <p>No Data Passed for Crime Table Count</p>
+    Console.WriteLine("No data available in either crimeResults or archiveDataResult.");
 }
 
 @code {
 
-    [Parameter] 
+    [Parameter]
     public List<CrimeInfo> results { get; set; }
-    [Parameter] 
+
+    [Parameter]
     public CrimeCheckModel FormInfo { get; set; }
-    
+
+    [Parameter]
+    public List<CrimeRecord> archiveDataResult { get; set; }
+
     private Table tableRef;
 
     private Task ScrollToRow() => tableRef.ScrollToRow(1).AsTask();

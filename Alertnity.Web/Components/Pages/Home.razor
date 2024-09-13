@@ -8,6 +8,8 @@
 @using Alertnity.Web.Models
 @inject IJSRuntime JSRuntime
 @using Blazorise;
+@using CsvHelper
+@using CsvHelper.Configuration
 
 <h1 class="container mt-2 d-flex align-items-center justify-content-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
@@ -45,6 +47,12 @@
     <StreetCountTable streetCounts="@streetCounts" />
     <CrimeRecordTable results="@crimeResults" FormInfo="@formInfo" />
 }
+else if (archiveDataResult != null && archiveDataResult.Any())
+{
+    <CategoryCountTable categoryCounts="@categoryCounts" />
+    <StreetCountTable streetCounts="@streetCounts" />
+    <CrimeRecordTable archiveDataResult="@archiveDataResult" FormInfo="@formInfo" />
+}
 else
 {
     <div>
@@ -54,65 +62,117 @@ else
     Console.Write("No Data Passed into the result. Check the APi, and make sure the date inserted is within the range");
 }
 
-@code {
-    
-    private CrimeCheckModel formInfo = new CrimeCheckModel();
+@code
+{
+    private CrimeCheckModel formInfo = new();
+
     private List<CrimeInfo> crimeResults = new();
-    private PostcodeConverter converter = new();
+    private List<CrimeRecord> archiveDataResult = new();
+
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
-
 
     public async Task FormSubmitted()
     {
         Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
         Console.WriteLine($"Submitted Date: {formInfo.Date}");
 
+        object crimeData = 0;
+
         if (formInfo.Date.HasValue)
         {
             var monthYear = formInfo.Date.Value.ToString("yyyy-MM");
-            Console.WriteLine($"Submitted Date (Year-Month): {monthYear}");
-            crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, formInfo.Date.Value);
+            Console.WriteLine($"Submitted CheckPostcodeCrimeRated Date (Year-Month): {monthYear}");
+
+            int year = int.Parse(formInfo.Date.Value.ToString("yyyy"));
+
+            if (year < 2020)
+            {
+                // Insert Postcode and Date in the Archive Data Method
+                PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
+                string directoryPath = @"C:\Users\ola\Desktop\Police";
+
+                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, formInfo.Date.Value);
+            }
+            else if (year > 2020)
+            {
+                // get crime data via API for 2020 and above
+                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, formInfo.Date.Value);
+            }
+            else
+            {
+                Console.WriteLine("No datat available");
+            }
         }
         else
         {
             Console.WriteLine("Date is not picked");
+            return;
         }
 
-
-
-        if (crimeResults.Count != null && crimeResults.Any())
+        if (crimeResults != null && crimeResults.Any())
         {
-            
             CountCategories();
             CountStreets();
-            
-            
-            var crimeData = crimeResults.Select(ci => new
+
+            crimeData = crimeResults.Select(ci => new
             {
-            
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
                 Count = crimeResults.Count(c => c.location.longitude == ci.location.longitude
                     && c.location.latitude == ci.location.latitude
-                    && ci.location.street.Name == ci.location.street.Name)
+                    && c.location.street.Name == ci.location.street.Name)
             }).ToList();
-            await JSRuntime.InvokeVoidAsync("getMap", crimeData);
         }
-        else if (crimeResults == null || !crimeResults.Any())
+        else if (archiveDataResult != null && archiveDataResult.Any())
         {
-            // Insert Postcode and Date in the Archive Data Method,
-            // return PostcodeConverter to get Longitude, Latitude and Admin_District
-            converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
+            CountCategoriesArchive();
+            CountStreetsArchive();
 
-            string directoryPath = @"C:\Users\ola\Desktop\text";
-            var crimeCounts = ArchiveCrimeByRadius.CoordinateCrimeCheckFromArchive(directoryPath, converter, formInfo.Date.Value);
+            crimeData = archiveDataResult.Select(ci => new
+            {
+                Longitude = float.Parse(ci.Longitude.ToString(CultureInfo.InvariantCulture)),
+                Latitude = float.Parse(ci.Latitude.ToString(CultureInfo.InvariantCulture)),  
+                
+                Street = ci.Street,
+                Count = archiveDataResult.Count(c => c.Longitude == ci.Longitude
+                    && c.Latitude == ci.Latitude
+                    && ci.Street == c.Street)
+            }).ToList();
         }
         else
         {
             Console.WriteLine("The results list is empty.");
+            return;
         }
+
+        // Pass crimeData to JavaScript for map rendering
+        await JSRuntime.InvokeVoidAsync("getMap", crimeData);
+    }
+
+     
+    public void CountCategoriesArchive()
+    {
+        categoryCounts = archiveDataResult
+            .GroupBy(ci => ci.outcome_status)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    public void CountStreetsArchive()
+    {
+        streetCounts = archiveDataResult
+            .GroupBy(ci => new { ci.Street, ci.Latitude, ci.Longitude })
+            .Select(g => new StreetCrimeData
+                {
+                    StreetName = g.Key.Street,
+                    CrimeCount = g.Count(),
+                    Latitude = g.Key.Latitude.ToString(),
+                    Longitude = g.Key.Longitude.ToString(),
+                    Crimes = string.Join(", ", g.Select(ci => ci.CrimeType)),
+                    CrimeCountsByType = g.GroupBy(ci => ci.CrimeType).ToDictionary(grp => grp.Key, grp => grp.Count())
+                })
+            .ToList();
     }
 
     public void CountCategories()
@@ -134,7 +194,7 @@ else
                     Longitude = g.Key.longitude,
                     Crimes = string.Join(", ", g.Select(ci => ci.category)),
                     CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                                     .ToDictionary(grp => grp.Key, grp => grp.Count())
+                                                                 .ToDictionary(grp => grp.Key, grp => grp.Count())
                 })
             .ToList();
     }
@@ -209,8 +269,8 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                                    <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
-                                                                                    </svg>`,
+                                                                                                <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
+                                                                                                </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
                     position: markerPosition

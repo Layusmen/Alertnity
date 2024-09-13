@@ -59,8 +59,7 @@ namespace Alertnity
         }
 
         public static Outcome[] PoliceApiReturnJson(string Url)
-        {
-
+        { 
             using (var client = new HttpClient())
             {
                 var endpoint = new Uri(Url);
@@ -79,7 +78,6 @@ namespace Alertnity
                 {
 
                 }
-
                 return null;
             }
         }
