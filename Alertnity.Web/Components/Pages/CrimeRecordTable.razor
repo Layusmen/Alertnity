@@ -4,16 +4,34 @@
 @using Blazorise
 
 
-@if ((results != null && results.Any()) || (archiveDataResult != null && archiveDataResult.Any()))
+@if ((results != null && results.Any()) || archiveDataResult != null && archiveDataResult.Any())
 {
     <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
-        <h2 class="text-center pt-4">Record of Crime for @FormInfo.DateRange[0]?.ToString("MMMM yyyy") and @FormInfo.DateRange[1]?.ToString("MMMM yyyy") around @FormInfo.Postcode.ToUpper()</h2>
-         <div class="mb-3">
+        
+        <h2 class="text-center pt-4">
+
+            <Span> Record of Crime for </Span>
+            
+            @if (FormInfo.DateRange.Count > 0 && FormInfo.DateRange[0].HasValue)
+            {
+                @FormInfo.DateRange[0]?.ToString("MMMM yyyy")
+            }
+            
+            @if (FormInfo.DateRange.Count > 1 && FormInfo.DateRange[1].HasValue)
+            {
+                <Span> and </Span>
+                <Span>@FormInfo.DateRange[1]?.ToString("MMMM yyyy") </Span>
+            }
+            <Span> around </Span> @FormInfo.Postcode.ToUpper()
+        </h2>
+        
+        
+        <div class="mb-3">
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
             <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
         </div>
 
-        <Table @ref="@tableRef" FixedHeader FixedHeaderTableHeight="800px">
+        <Table @ref="@tableRef" FixedHeader FixedHeaderTableMaxHeight ="300px">
             <TableHeader ThemeContrast="ThemeContrast.Dark">
                 <TableRow>
                     <TableHeaderCell>#</TableHeaderCell>
@@ -60,8 +78,8 @@
         </Table>
     </div>
 
-    <div class="m-3">
-        <p>Total number of Crimes Recorded for the whole Month: @(results?.Count ?? archiveDataResult?.Count)</p>
+    <div class="container mt-5" style="position:relative">
+        <p>Total number of Crimes Recorded: @(results?.Count ?? archiveDataResult?.Count)</p>
         <p>Date Searched: @DateTime.Now.ToString("MMMM yyyy")</p>
     </div>
 }
@@ -84,6 +102,6 @@ else
 
     private Table tableRef;
 
-    private Task ScrollToRow() => tableRef.ScrollToRow(1).AsTask();
+    private Task ScrollToRow() => tableRef.ScrollToRow(3).AsTask();
     private Task ScrollToPixels() => tableRef.ScrollToPixels(250).AsTask();
 }

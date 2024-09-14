@@ -58,8 +58,7 @@ else
 }
 
 @code
-{
-    
+{   
     private CrimeCheckModel formInfo = new();
 
     private List<CrimeInfo> crimeResults = new();
@@ -70,39 +69,42 @@ else
 
     public async Task FormSubmitted()
     {
-        DateTime startDate = formInfo.DateRange[0].Value;
-        DateTime endDate = formInfo.DateRange[1].Value;
+        // Extract start and end dates safely
+        DateTime? startDate = formInfo.DateRange[0];
+        DateTime? endDate = formInfo.DateRange.Count > 1 ? formInfo.DateRange[1] : null;
 
-        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
-        Console.WriteLine($"Submitted Date: {startDate.ToString("yyyy-MM-dd") ?? "No Start Date Selected"} and {endDate.ToString("yyyy-MM-dd") ?? "No End Date Selected"}");
         
-        //Dates = "(formInfo.DateRange[0], formInfo.DateRange[1])"
+        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
+        Console.WriteLine($"Submitted Date: {startDate?.ToString("yyyy-MM-dd")} and {(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "No End Date Selected")}");
+
+
         object crimeData = 0;
 
-        if (formInfo.DateRange[0].HasValue)
+        // Check if startDate has a value before proceeding
+        if (startDate.HasValue)
         {
-            var monthYear = startDate.ToString("yyyy-MM");
+            string monthYear = startDate.Value.ToString("yyyy-MM");
             Console.WriteLine($"Submitted CheckPostcodeCrimeRated Date (Year-Month): {monthYear}");
 
-            int year = int.Parse(startDate.ToString("yyyy"));
+            int year = startDate.Value.Year;
 
             if (year > 2020)
             {
-                // get crime data via API for 2020 and above
-                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, startDate);
+                // Get crime data for 2020 and above
+                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
             else if (year < 2020 || crimeResults == null)
             {
-                // Insert Postcode and Date in the Archive Data Method
+                // Archive data
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
-
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
 
-                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate, endDate);
+                // Bring out result
+                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
             else
             {
-                Console.WriteLine("No datat available");
+                Console.WriteLine("No data available");
             }
         }
         else
@@ -111,6 +113,7 @@ else
             return;
         }
 
+        // Check and process crimeResults
         if (crimeResults != null && crimeResults.Any())
         {
             CountCategories();
@@ -126,6 +129,7 @@ else
                     && c.location.street.Name == ci.location.street.Name)
             }).ToList();
         }
+        // Check and process archiveDataResult
         else if (archiveDataResult != null && archiveDataResult.Any())
         {
             CountCategoriesArchive();
@@ -134,8 +138,7 @@ else
             crimeData = archiveDataResult.Select(ci => new
             {
                 Longitude = float.Parse(ci.Longitude.ToString(CultureInfo.InvariantCulture)),
-                Latitude = float.Parse(ci.Latitude.ToString(CultureInfo.InvariantCulture)),  
-                
+                Latitude = float.Parse(ci.Latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.Street,
                 Count = archiveDataResult.Count(c => c.Longitude == ci.Longitude
                     && c.Latitude == ci.Latitude
@@ -152,7 +155,6 @@ else
         await JSRuntime.InvokeVoidAsync("getMap", crimeData);
     }
 
-     
     public void CountCategoriesArchive()
     {
         categoryCounts = archiveDataResult
@@ -270,7 +272,7 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                                                <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">Number of Crime: ${crime.count}</text>
+                                                                                                        <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
                                                                                                 </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,

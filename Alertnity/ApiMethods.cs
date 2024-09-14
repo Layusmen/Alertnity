@@ -113,35 +113,94 @@ namespace Alertnity
             return crimeInfos;
         }
 
-        public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime date)
+        public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime startDateTime, DateTime? endDateTime)
         {
-            //string insertDate = date.ToString();
-            string insertDate = date.ToString("yyyy-MM");
-            //Fetching Nearest Postcodes to be able to calculate Community Crime Rate, used 600m radius and 100 postcode limit
-            var Url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=600&limit=100";
-            PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(Url);
+            // If endDateTime is null
+            DateTime actualEndDate = endDateTime ?? startDateTime;
 
-            //Now Save all Longitude and Latitude Into an instance of List<PostcodeConverter>
+            // Get the months between start and end dates
+            List<string> months = GetMonthsBetween(startDateTime, actualEndDate);
 
+            // Fetch nearest postcodes
+            string url = $"https://api.postcodes.io/postcodes/{insertPostcode}/nearest?radius=600&limit=100";
+            PostcodeApiResponse postcodeApiResponseValue = ApiMethods.PostcodeApiReturnJson(url);
             List<PostcodeConverter> converters = ApiMethods.SavePostcodeApiResponse(postcodeApiResponseValue);
 
+            // Instance of the result list
+            var allCrimeInfo = new List<CrimeInfo>();
 
-            //Now Insert the postcodeApiResponseValue into Police API
-            //First convert the response
-            string poly = ApiMethods.CreatePolyParameter(converters);
-            //Insert the converted response into the API Url
-            Url = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={insertDate}";
+            // Iterate through each month
+            foreach (var month in months)
+            {
+                string poly = ApiMethods.CreatePolyParameter(converters);
+                string crimeUrl = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={month}";
+                Console.WriteLine($"Checking data for: {crimeUrl}");
 
-            Console.WriteLine(Url);
+                try
+                {
+                    // Make API call
+                    Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(crimeUrl);
 
+                    // continue with the next month if no result for the present month.
+                    if (crimeIncidents == null || crimeIncidents.Length == 0)
+                    {
+                        Console.WriteLine($"No data returned for {month}, continuing to next month.");
+                        continue;
+                    }
 
-            Outcome[] crimeIncidents = ApiMethods.PoliceApiReturnJson(Url);
+                    // Process and add the crime incidents
+                    var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
+                    allCrimeInfo.AddRange(processedCrimeInfo);
+                }
+                catch (Exception ex)
+                {
+                    // Log the error 
+                    Console.WriteLine($"Error fetching data for {month}: {ex.Message}");
+                    continue; 
+                }
+            }
 
-            //Outputting crimeInformation for the postcodes
-            var processedCrimeInfo = ApiMethods.ProcessCrimeIncidents(crimeIncidents);
-
-            return processedCrimeInfo;
+            // Return all processed crime info, even if some months had no data
+            return allCrimeInfo;
         }
+
+        public static List<string> GetMonthsBetween(DateTime startDate, DateTime endDate)
+        {
+            var monthResult = new List<string>();
+
+            if (startDate != null && endDate != null)
+            {
+                // Check correct start and end dates
+                DateTime start = startDate < endDate ? startDate : endDate;
+                DateTime end = startDate > endDate ? startDate : endDate;
+
+                // Calculate total months between startDate and endDate
+                int totalMonths = ((end.Year - start.Year) * 12) + (end.Month - start.Month);
+
+                // Check through the months
+                for (int i = 0; i <= totalMonths; i++)
+                {
+                    DateTime insertDate = start.AddMonths(i);
+
+                    // Skip if the month is in the future
+                    if (insertDate > DateTime.Now)
+                    {
+                        Console.WriteLine($"Skipping future date: {insertDate.ToString("yyyy-MM")}");
+                        continue;
+                    }
+
+                    string formattedDate = insertDate.ToString("yyyy-MM");
+                    monthResult.Add(formattedDate);
+                }
+            }
+            else
+            {
+                Console.WriteLine("Invalid date range.");
+            }
+
+            return monthResult;
+        }
+
 
     }
 
