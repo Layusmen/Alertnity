@@ -91,7 +91,7 @@ namespace Alertnity.ArchiveDataAnalysis
             return isDateInRange && containsAdminDistrict && containsSecondKeyword;
         }
 
-        public static List<CrimeRecord> ProcessDirectory(PostcodeConverter converter, string directoryPath, DateTime startDateTime, DateTime? endDateTime = null)
+        public static List<CrimeRecord> ProcessDirectory(PostcodeConverter converter, string directoryPath, DateTime startDateTime, DateTime? endDateTime)
         {
             double radiusMeters = 300.0;
             double Latitude = converter.Latitude;

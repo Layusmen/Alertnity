@@ -27,9 +27,15 @@
 
         <div class="mb-3">
             <label for="date" class="form-label">Date To Check</label>
+            
+            <DatePicker TValue="DateTime?" @bind-Dates="@formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
 
-            <InputDate class="form-control" @bind-Value="formInfo.Date" />
-            <ValidationMessage For="@(() => formInfo.Date)" />
+         
+
+           
+        <!--<DatePicker TValue="DateTime?" @bind-Dates="selectedDates" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" />-->
+             <!-- <InputDate class="form-control" @bind-Value="formInfo.Date" /> -->
+            <ValidationMessage For="@(() => formInfo.DateRange)" />
             <div class="form-text">
                 Insert month in this format: YYYY-MM.
             </div>
@@ -64,6 +70,14 @@ else
 
 @code
 {
+    //Date Range Selection Instance
+    IReadOnlyList<DateTime?> DateRange;
+    
+
+
+    DateTime? value;
+   
+
     private CrimeCheckModel formInfo = new();
 
     private List<CrimeInfo> crimeResults = new();
@@ -74,30 +88,35 @@ else
 
     public async Task FormSubmitted()
     {
-        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
-        Console.WriteLine($"Submitted Date: {formInfo.Date}");
+        DateTime startDate = formInfo.DateRange[0].Value;
+        DateTime endDate = formInfo.DateRange[1].Value;
 
+        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
+        Console.WriteLine($"Submitted Date: {startDate.ToString("yyyy-MM-dd") ?? "No Start Date Selected"} and {endDate.ToString("yyyy-MM-dd") ?? "No End Date Selected"}");
+        
+        //Dates = "(formInfo.DateRange[0], formInfo.DateRange[1])"
         object crimeData = 0;
 
-        if (formInfo.Date.HasValue)
+        if (formInfo.DateRange[0].HasValue)
         {
-            var monthYear = formInfo.Date.Value.ToString("yyyy-MM");
+            var monthYear = startDate.ToString("yyyy-MM");
             Console.WriteLine($"Submitted CheckPostcodeCrimeRated Date (Year-Month): {monthYear}");
 
-            int year = int.Parse(formInfo.Date.Value.ToString("yyyy"));
+            int year = int.Parse(startDate.ToString("yyyy"));
 
-            if (year < 2020)
+            if (year > 2020)
+            {
+                // get crime data via API for 2020 and above
+                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, startDate);
+            }
+            else if (year < 2020 || crimeResults == null)
             {
                 // Insert Postcode and Date in the Archive Data Method
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
+
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
 
-                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, formInfo.Date.Value);
-            }
-            else if (year > 2020)
-            {
-                // get crime data via API for 2020 and above
-                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, formInfo.Date.Value);
+                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate, endDate);
             }
             else
             {
@@ -155,7 +174,7 @@ else
     public void CountCategoriesArchive()
     {
         categoryCounts = archiveDataResult
-            .GroupBy(ci => ci.outcome_status)
+            .GroupBy(ci => ci.CrimeType)
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
