@@ -27,14 +27,7 @@
 
         <div class="mb-3">
             <label for="date" class="form-label">Date To Check</label>
-            
             <DatePicker TValue="DateTime?" @bind-Dates="@formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
-
-         
-
-           
-        <!--<DatePicker TValue="DateTime?" @bind-Dates="selectedDates" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" />-->
-             <!-- <InputDate class="form-control" @bind-Value="formInfo.Date" /> -->
             <ValidationMessage For="@(() => formInfo.DateRange)" />
             <div class="form-text">
                 Insert month in this format: YYYY-MM.
@@ -70,14 +63,7 @@ else
 
 @code
 {
-    //Date Range Selection Instance
-    IReadOnlyList<DateTime?> DateRange;
     
-
-
-    DateTime? value;
-   
-
     private CrimeCheckModel formInfo = new();
 
     private List<CrimeInfo> crimeResults = new();
