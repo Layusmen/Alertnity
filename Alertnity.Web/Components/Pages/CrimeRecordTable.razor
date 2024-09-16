@@ -7,10 +7,10 @@
 @if ((results != null && results.Any()) || archiveDataResult != null && archiveDataResult.Any())
 {
     <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
-        
-        <h2 class="text-center pt-4">
 
-            <Span> Record of Crime for </Span>
+        <h2 class="fw-bolder text-center pt-4" Style="color: #800080;">
+
+            <Span > Record of Crime for </Span>
             
             @if (FormInfo.DateRange.Count > 0 && FormInfo.DateRange[0].HasValue)
             {
@@ -27,12 +27,13 @@
         
         
         <div class="mb-3">
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToRow">Scroll To Row</Button>
-            <Button Size="Size.Small" Color="Color.Primary" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
+            <Button Size="Size.Small" Style="background-color: #800080; color: white;" Clicked="@ScrollToRow">Scroll To Row</Button>
+            <Button Size="Size.Small" Style="background-color: #800080; color: white;" Clicked="@ScrollToPixels">Scroll To Pixels</Button>
         </div>
 
-        <Table @ref="@tableRef" FixedHeader FixedHeaderTableMaxHeight ="300px">
-            <TableHeader ThemeContrast="ThemeContrast.Dark">
+        <Table Bordered @ref="@tableRef" FixedHeader FixedHeaderTableMaxHeight="300px" Style="color: #800080;">
+
+            <TableHeader Class="custom-header" Style="color: #800080;">
                 <TableRow>
                     <TableHeaderCell>#</TableHeaderCell>
                     <TableHeaderCell>Category</TableHeaderCell>
@@ -47,7 +48,7 @@
             {
                 @foreach (var (index, ci) in results.Select((ci, index) => (index, ci)))
                 {
-                    <TableBody>
+                    <TableBody Style="color: rgb(190,64,210);">
                         <TableRow>
                             <TableRowHeader>@(index + 1)</TableRowHeader>
                             <TableRowCell>@ci.category</TableRowCell>
@@ -105,3 +106,10 @@ else
     private Task ScrollToRow() => tableRef.ScrollToRow(3).AsTask();
     private Task ScrollToPixels() => tableRef.ScrollToPixels(250).AsTask();
 }
+
+
+<style>
+    .custom-header {
+        background-color: rgb(190, 64, 210) !;
+    }
+</style>

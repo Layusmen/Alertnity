@@ -2,10 +2,10 @@
 @using Blazorise
 
 <div class="container border-5 mt-5" style="position:relative;width:100%;min-width:290px;height:500px;">
-    <h2 class="text-center pt-4">Street Crime Counts</h2>
+    <h2 class="fw-bolder text-center pt-4" Style="color: #800080;">Street Crime Counts</h2>
 
-    <Table FixedHeader FixedHeaderTableHeight="800px">
-        <TableHeader ThemeContrast="ThemeContrast.Dark">
+    <Table Bordered FixedHeader FixedHeaderTableHeight="800px" Style="color: #800080;">
+        <TableHeader ThemeContrast="ThemeContrast.Light" Style="color: #800080;">
             <TableRow>
                 <TableHeaderCell>#</TableHeaderCell>
                 <TableHeaderCell>Street</TableHeaderCell>
@@ -17,7 +17,7 @@
         </TableHeader>
         @foreach (var (index, street) in streetCounts.Select((street, index) => (index, street)))
         {
-            <TableBody>
+            <TableBody Style="color: rgb(190,64,210);">
                 <TableRow>
                     <TableRowHeader>@(index + 1)</TableRowHeader>
 

@@ -10,37 +10,50 @@
 @using Blazorise;
 @using CsvHelper
 @using CsvHelper.Configuration
+<div class="pb-5 pt-5" style="background-color:  #faf9f6;">
+    <div class="container mt-2 d-flex align-items-center justify-content-center">
+        <Image Source="bootstrap/Images/comtitynew.png" Text="Comtity" />
+    </div>
 
-<h1 class="container mt-2 d-flex align-items-center justify-content-center"> Welcome to Alertnity! Check Your Community Crime Details </h1>
 
-<div class="container mt-2 d-flex align-items-center justify-content-center">
-    <EditForm Model="@formInfo" OnValidSubmit="FormSubmitted">
-        <DataAnnotationsValidator />
-        <div class="mb-3">
-            <label for="postcode" class="form-label">Postcode</label>
-            <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="formInfo.Postcode" />
-            <ValidationMessage For="@(() => formInfo.Postcode)" />
-            <div class="form-text">
-                Please Insert Postcode in this format: PO148B
+    <div class="container mt-5 d-flex flex-column align-items-center justify-content-center greeting">
+        <h1 class="fw-bolder" style="color: rgb(190,64,210);">Welcome to Comtity!</h1>
+        <h1 class="fw-bolder p-3" style="color: #800080;">Community Security Watch and Crime Monitoring</h1>
+    </div>
+
+
+    <div class="container mt-2 d-flex align-items-center justify-content-center">
+        <EditForm Model="@formInfo" OnValidSubmit="FormSubmitted">
+            <DataAnnotationsValidator />
+            <div class="mb-3">
+                <label for="postcode" class="form-label h5 fw-bold" style="color:  #800080">Postcode</label>
+                <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="formInfo.Postcode" />
+                <ValidationMessage For="@(() => formInfo.Postcode)" />
+                <div class="form-text">
+                    Please Insert Postcode in this format: PO148B
+                </div>
             </div>
-        </div>
 
-        <div class="mb-3">
-            <label for="date" class="form-label">Date To Check</label>
-            <DatePicker TValue="DateTime?" @bind-Dates="@formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
-            <ValidationMessage For="@(() => formInfo.DateRange)" />
-            <div class="form-text">
-                Insert month in this format: YYYY-MM.
+            <div class="mb-3">
+                <label for="date" class="form-label h5 fw-bold" style="color:#800080">Pick Date To Check</label>
+                <DatePicker TValue="DateTime?" @bind-Dates="@formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
+                <ValidationMessage For="@(() => formInfo.DateRange)" />
+                <div class="form-text">
+                    Insert month range or a single month.
+                </div>
             </div>
-        </div>
-        <button type="submit" class="btn btn-primary">Submit</button>
-    </EditForm>
+            <button type="submit" class="btn" style="background-color:#800080; color: white;">Submit</button>
+        </EditForm>
+    </div>
 </div>
 
 <!-- Crime Map Display -->
-<CrimeMap />
+@if (showMap)
+{
+    <CrimeMap />
+}
 
-@if (crimeResults.Count != null && crimeResults.Any())
+@if (crimeResults?.Count != null && crimeResults.Any())
 {
     <CategoryCountTable categoryCounts="@categoryCounts" />
     <StreetCountTable streetCounts="@streetCounts" />
@@ -58,7 +71,7 @@ else
 }
 
 @code
-{   
+{
     private CrimeCheckModel formInfo = new();
 
     private List<CrimeInfo> crimeResults = new();
@@ -66,28 +79,23 @@ else
 
     private Dictionary<string, int> categoryCounts = new();
     private List<StreetCrimeData> streetCounts = new();
-
+    private bool showMap = false;
+    private bool isMapInitialized = false;
     public async Task FormSubmitted()
     {
         // Extract start and end dates safely
         DateTime? startDate = formInfo.DateRange[0];
         DateTime? endDate = formInfo.DateRange.Count > 1 ? formInfo.DateRange[1] : null;
-
-        
         Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
         Console.WriteLine($"Submitted Date: {startDate?.ToString("yyyy-MM-dd")} and {(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "No End Date Selected")}");
-
-
         object crimeData = 0;
 
-        // Check if startDate has a value before proceeding
+
         if (startDate.HasValue)
         {
             string monthYear = startDate.Value.ToString("yyyy-MM");
             Console.WriteLine($"Submitted CheckPostcodeCrimeRated Date (Year-Month): {monthYear}");
-
             int year = startDate.Value.Year;
-
             if (year > 2020)
             {
                 // Get crime data for 2020 and above
@@ -150,8 +158,10 @@ else
             Console.WriteLine("The results list is empty.");
             return;
         }
-
-        // Pass crimeData to JavaScript for map rendering
+        showMap = true;
+        StateHasChanged();
+        //delay for DOM update
+        await Task.Delay(100);
         await JSRuntime.InvokeVoidAsync("getMap", crimeData);
     }
 
@@ -197,7 +207,7 @@ else
                     Longitude = g.Key.longitude,
                     Crimes = string.Join(", ", g.Select(ci => ci.category)),
                     CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                                                 .ToDictionary(grp => grp.Key, grp => grp.Count())
+                                                                         .ToDictionary(grp => grp.Key, grp => grp.Count())
                 })
             .ToList();
     }
@@ -272,8 +282,8 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                                                        <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
-                                                                                                </svg>`,
+                                                                                                                <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
+                                                                                                        </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
                     position: markerPosition
