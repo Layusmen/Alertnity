@@ -1,0 +1,17 @@
+@using Alertnity.Web.Models
+@using Alertnity.Web.Models
+@using ChartJs.Blazor.BarChart;
+@using ChartJs.Blazor.Common.Axes;
+@using ChartJs.Blazor.Common;
+
+<h1>Crimes by Street</h1>
+
+
+
+@code {
+    [Parameter]
+    public List<StreetCrimeData> streetCount { get; set; } = new();
+
+    
+}
+

@@ -56,14 +56,23 @@
 @if (crimeResults?.Count != null && crimeResults.Any())
 {
     <CategoryCountTable categoryCounts="@categoryCounts" />
+
+    <CategoryCountChart categoryCounts="@categoryCounts" />
+
     <StreetCountTable streetCounts="@streetCounts" />
+    //<StreetCountChart streetCounts ="@streetCounts"/>
     <CrimeRecordTable results="@crimeResults" FormInfo="@formInfo" />
+    
 }
 else if (archiveDataResult != null && archiveDataResult.Any())
 {
     <CategoryCountTable categoryCounts="@categoryCounts" />
+    <CategoryCountChart categoryCounts="@categoryCounts" />
+
+
     <StreetCountTable streetCounts="@streetCounts" />
     <CrimeRecordTable archiveDataResult="@archiveDataResult" FormInfo="@formInfo" />
+    
 }
 else
 {
