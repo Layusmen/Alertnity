@@ -1,86 +1,74 @@
-﻿@using ChartJs.Blazor.PieChart
+﻿@using Alertnity.Web.Models;
+@inject IJSRuntime JSRuntime;
 
-<div class="container border-5 mt-5" style="width:100%; height:800px">
-    <button>Update Chart</button>
-    <h2 class="fw-bolder text-center pt-4" style="color: #800080;">Category Counts</h2>
-    <Chart Config="_config"></Chart>
+<div class="container border-5 mt-5" style="width:100%; height:800px;">
+    <h2 class="fw-bolder text-center pt-4" style="color: #800080;">Crimes by Category</h2>
+    <div class="chart-container" style="width:100%; height:90%; display: flex; justify-content: center; align-items: center;">
+        <canvas class="mx-auto" id="myChart" style="width: 80%; height: 80%;"></canvas>
+    </div>
 </div>
 
 
 
 @code {
-    private PieConfig _config;
+    
 
     [Parameter]
     public Dictionary<string, int> categoryCounts { get; set; } = new();
-
-    protected override void OnInitialized()
+   
+    protected override async Task OnAfterRenderAsync(bool firstRender)
     {
-        InitializeChart();
-    }
-
-    private void InitializeChart()
-    {
-        _config = new PieConfig
-            {
-                Options = new PieOptions
-                {
-                    Responsive = true,
-                    Title = new OptionsTitle
-                    {
-                        Display = true,
-                        Text = "Crime Category Distribution"
-                    }
-                }
-            };
-
-        UpdateChartData();
-    }
-
-    private void UpdateChartData()
-    {
-        _config.Data.Labels.Clear();
-        _config.Data.Datasets.Clear();
-
-        // Add labels dynamically from categoryCounts keys
-        foreach (var label in categoryCounts.Keys)
+        if (firstRender)
         {
-            _config.Data.Labels.Add(label);
+            string[] labels = categoryCounts.Keys.ToArray();
+            var data = categoryCounts.Values.Select(v => (double)v).ToList();
+
+            // Call the JavaScript Interop
+            await JSRuntime.InvokeVoidAsync("createDoughnutChart", "myChart", labels, data);
         }
-
-        // Get the count values dynamically from categoryCounts values
-        var counts = categoryCounts.Values.Select(v => (int)v).ToList();
-
-        // Generate dynamic colors for each category
-        var colors = GenerateRandomColors(counts.Count);
-
-        PieDataset<int> dataset = new PieDataset<int>(counts)
-            {
-                BackgroundColor = colors.ToArray() // Convert List<string> to string[]
-            };
-
-        _config.Data.Datasets.Add(dataset);
     }
 
-    
-
-    // Method to generate random colors in hex format
-    private List<string> GenerateRandomColors(int count)
-    {
-        var random = new Random();
-        var colors = new List<string>();
-
-        for (int i = 0; i < count; i++)
-        {
-            // Ensure values are within byte range (0-255)
-            byte r = (byte)random.Next(256);
-            byte g = (byte)random.Next(256);
-            byte b = (byte)random.Next(256);
-
-            // Create color in hex format
-            colors.Add(ColorUtil.ColorHexString(r, g, b));
-        }
-
-        return colors;
-    }
 }
+<script>
+   
+    window.createDoughnutChart = (canvasId, labels, data) => {
+        
+        var ctx = document.getElementById(canvasId).getContext('2d');
+
+        // Chart data
+        const chartData = {
+            labels: labels,
+            datasets: [{
+                label: 'Crimes by Category',
+                data: data,
+                options: {
+                    responsive: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        },
+                    }
+                },
+                backgroundColor: [
+                    'rgba(255, 99, 132)',
+                    'rgba(54, 162, 235)',
+                    'rgba(255, 206, 86)',
+                    'rgba(75, 192, 192)',
+                    'rgba(153, 102, 255)'
+                ],
+
+                hoverOffset: 8
+            }]
+        };
+
+        // Chart.js configuration
+        const config = {
+            type: 'doughnut',
+            data: chartData,
+        };
+
+        // Create and render the chart
+        new Chart(ctx, config);
+    };
+
+</script>

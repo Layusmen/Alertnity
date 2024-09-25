@@ -4,7 +4,11 @@
     <main>
         <NavMenu />
         <article class="content px-4" style="background-color:  #faf9f6;">
-            @Body
+
+            <CascadingValue Value="@ApplicationState">
+                @Body
+            </CascadingValue>
+       
         </article>
     </main>
 </div>
@@ -14,3 +18,7 @@
     <a href="" class="reload">Reload</a>
     <a class="dismiss">🗙</a>
 </div>
+@code{
+    public AppState ApplicationState { get; set; } = new();
+}
+

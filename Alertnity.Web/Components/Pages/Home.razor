@@ -1,34 +1,35 @@
 ﻿@page "/"
-@using Alertnity
-@using Alertnity.ArchiveDataAnalysis
-@using Alertnity.PoliceApi
-@using System.ComponentModel.DataAnnotations
-@using System.Globalization
-@using Alertnity.PostcodeApi
-@using Alertnity.Web.Models
-@inject IJSRuntime JSRuntime
+@using Alertnity;
+@using Alertnity.ArchiveDataAnalysis;
+@using Alertnity.PoliceApi;
+@using System.ComponentModel.DataAnnotations;
+@using System.Globalization;
+@using Alertnity.PostcodeApi;
+@using Alertnity.Web.Models;
+@inject IJSRuntime JSRuntime;
 @using Blazorise;
-@using CsvHelper
-@using CsvHelper.Configuration
+@using CsvHelper;
+@using CsvHelper.Configuration;
+@using Microsoft.AspNetCore.Components.Web.Extensions;
+@inject ProtectedSessionStorage ProtectedSessionStorage;
+
 <div class="pb-5 pt-5" style="background-color:  #faf9f6;">
     <div class="container mt-2 d-flex align-items-center justify-content-center">
         <Image Source="bootstrap/Images/comtitynew.png" Text="Comtity" />
     </div>
-
 
     <div class="container mt-5 d-flex flex-column align-items-center justify-content-center greeting">
         <h1 class="fw-bolder" style="color: rgb(190,64,210);">Welcome to Comtity!</h1>
         <h1 class="fw-bolder p-3" style="color: #800080;">Community Security Watch and Crime Monitoring</h1>
     </div>
 
-
     <div class="container mt-2 d-flex align-items-center justify-content-center">
-        <EditForm Model="@formInfo" OnValidSubmit="FormSubmitted">
+        <EditForm Model="@ApplicationState.formInfo" OnValidSubmit="FormSubmitted">
             <DataAnnotationsValidator />
             <div class="mb-3">
                 <label for="postcode" class="form-label h5 fw-bold" style="color:  #800080">Postcode</label>
-                <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="formInfo.Postcode" />
-                <ValidationMessage For="@(() => formInfo.Postcode)" />
+                <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="ApplicationState.formInfo.Postcode" />
+                <ValidationMessage For="@(() => ApplicationState.formInfo.Postcode)" />
                 <div class="form-text">
                     Please Insert Postcode in this format: PO148B
                 </div>
@@ -36,8 +37,8 @@
 
             <div class="mb-3">
                 <label for="date" class="form-label h5 fw-bold" style="color:#800080">Pick Date To Check</label>
-                <DatePicker TValue="DateTime?" @bind-Dates="@formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
-                <ValidationMessage For="@(() => formInfo.DateRange)" />
+                <DatePicker TValue="DateTime?" @bind-Dates="@ApplicationState.formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
+                <ValidationMessage For="@(() => ApplicationState.formInfo.DateRange)" />
                 <div class="form-text">
                     Insert month range or a single month.
                 </div>
@@ -48,81 +49,70 @@
 </div>
 
 <!-- Crime Map Display -->
-@if (showMap)
+@if (ApplicationState.showMap)
 {
-    <CrimeMap />
+    <CrimeMap/>
 }
 
-@if (crimeResults?.Count != null && crimeResults.Any())
+@if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
 {
-    <CategoryCountTable categoryCounts="@categoryCounts" />
+    <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
+    <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
 
-    <CategoryCountChart categoryCounts="@categoryCounts" />
+    <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
+    <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
 
-    <StreetCountTable streetCounts="@streetCounts" />
-    //<StreetCountChart streetCounts ="@streetCounts"/>
-    <CrimeRecordTable results="@crimeResults" FormInfo="@formInfo" />
-    
+    <CrimeRecordTable results="@ApplicationState.crimeResults" FormInfo="@ApplicationState.formInfo" />
 }
-else if (archiveDataResult != null && archiveDataResult.Any())
+else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
 {
-    <CategoryCountTable categoryCounts="@categoryCounts" />
-    <CategoryCountChart categoryCounts="@categoryCounts" />
+    <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
+    <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
 
+    <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
+    <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
 
-    <StreetCountTable streetCounts="@streetCounts" />
-    <CrimeRecordTable archiveDataResult="@archiveDataResult" FormInfo="@formInfo" />
-    
+    <CrimeRecordTable archiveDataResult="@ApplicationState.archiveDataResult" FormInfo="@ApplicationState.formInfo" />
 }
 else
 {
-    Console.Write("No Data Passed into the result. Check the APi, and make sure the date inserted is within the range");
+    Console.WriteLine("No Data Passed into the result. Check the API, and make sure the date inserted is within the range");
 }
 
 @code
 {
-    private CrimeCheckModel formInfo = new();
-
-    private List<CrimeInfo> crimeResults = new();
-    private List<CrimeRecord> archiveDataResult = new();
-
-    private Dictionary<string, int> categoryCounts = new();
-    private List<StreetCrimeData> streetCounts = new();
     private bool showMap = false;
-    private bool isMapInitialized = false;
+
+    [Inject]
+    public AppState ApplicationState { get; set; }
+
+    private bool isFirstRender = true;
+    
     public async Task FormSubmitted()
     {
-        // Extract start and end dates safely
-        DateTime? startDate = formInfo.DateRange[0];
-        DateTime? endDate = formInfo.DateRange.Count > 1 ? formInfo.DateRange[1] : null;
-        Console.WriteLine($"Submitted Postcode: {formInfo.Postcode}");
-        Console.WriteLine($"Submitted Date: {startDate?.ToString("yyyy-MM-dd")} and {(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "No End Date Selected")}");
-        object crimeData = 0;
+        DateTime? startDate = ApplicationState.formInfo.DateRange[0];
+        DateTime? endDate = ApplicationState.formInfo.DateRange.Count > 1 ? ApplicationState.formInfo.DateRange[1] : null;
 
+        Console.WriteLine($"Submitted Postcode: {ApplicationState.formInfo.Postcode}");
+        Console.WriteLine($"Submitted Date: {startDate?.ToString("yyyy-MM-dd")} and {(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "No End Date Selected")}");
 
         if (startDate.HasValue)
         {
-            string monthYear = startDate.Value.ToString("yyyy-MM");
-            Console.WriteLine($"Submitted CheckPostcodeCrimeRated Date (Year-Month): {monthYear}");
             int year = startDate.Value.Year;
-            if (year > 2020)
+            if (year >= 2020)
             {
-                // Get crime data for 2020 and above
-                crimeResults = ApiMethods.CheckPostcodeCrimeRate(formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
-            }
-            else if (year < 2020 || crimeResults == null)
-            {
-                // Archive data
-                PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(formInfo.Postcode);
-                string directoryPath = @"C:\Users\ola\Desktop\Police";
-
-                // Bring out result
-                archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
+                ApplicationState.crimeResults = ApiMethods.CheckPostcodeCrimeRate(ApplicationState.formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
+                
             }
             else
             {
-                Console.WriteLine("No data available");
+                PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(ApplicationState.formInfo.Postcode);
+                string directoryPath = @"C:\Users\ola\Desktop\Police";
+                ApplicationState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
+            
             }
+
+            StateHasChanged();  
         }
         else
         {
@@ -130,60 +120,125 @@ else
             return;
         }
 
-        // Check and process crimeResults
-        if (crimeResults != null && crimeResults.Any())
+        // Process crimeResults
+        if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
         {
+            Console.WriteLine($"crimeResults count: {ApplicationState.crimeResults.Count}");
             CountCategories();
             CountStreets();
+        }
+        // Process archiveDataResult
+        else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
+        {
+            Console.WriteLine($"archiveDataResult count: {ApplicationState.archiveDataResult.Count}");
+            CountCategoriesArchive();
+            CountStreetsArchive();
+        }
+        else
+        {
+            Console.WriteLine("No data found in either crimeResults or archiveDataResult.");
+            return;
+        }
 
-            crimeData = crimeResults.Select(ci => new
+        ApplicationState.showMap = true;
+        StateHasChanged();  
+
+        // Save the state to session storage
+        
+        await ProtectedSessionStorage.SetAsync("ApplicationState", ApplicationState);
+
+        // Delay for DOM update
+        await Task.Delay(100);  
+        await JSRuntime.InvokeVoidAsync("getMap", GenerateCrimeDataForMap());
+    }
+
+    protected override async Task OnAfterRenderAsync(bool firstRender)
+    {
+        if (firstRender)
+        {
+            await Task.Delay(100);
+
+            // Load the application state from session storage
+            var storedState = await ProtectedSessionStorage.GetAsync<AppState>("ApplicationState");
+            
+            if (storedState.Success && storedState.Value != null)
+            {
+                ApplicationState = storedState.Value;
+            }
+            else
+            {
+                Console.WriteLine("No data found in session storage.");
+            }
+
+            if (ApplicationState.showMap)
+            {
+                await JSRuntime.InvokeVoidAsync("getMap", GenerateCrimeDataForMap());
+            }
+        }
+    }
+
+    private List<object> GenerateCrimeDataForMap()
+    {
+        if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
+        {
+            return ApplicationState.crimeResults.Select(ci => new
             {
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
-                Count = crimeResults.Count(c => c.location.longitude == ci.location.longitude
+                Count = ApplicationState.crimeResults.Count(c => c.location.longitude == ci.location.longitude
                     && c.location.latitude == ci.location.latitude
                     && c.location.street.Name == ci.location.street.Name)
-            }).ToList();
+            }).Cast<object>().ToList();
         }
-        // Check and process archiveDataResult
-        else if (archiveDataResult != null && archiveDataResult.Any())
+        else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
         {
-            CountCategoriesArchive();
-            CountStreetsArchive();
-
-            crimeData = archiveDataResult.Select(ci => new
+            return ApplicationState.archiveDataResult.Select(ci => new
             {
                 Longitude = float.Parse(ci.Longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.Latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.Street,
-                Count = archiveDataResult.Count(c => c.Longitude == ci.Longitude
+                Count = ApplicationState.archiveDataResult.Count(c => c.Longitude == ci.Longitude
                     && c.Latitude == ci.Latitude
                     && ci.Street == c.Street)
-            }).ToList();
+            }).Cast<object>().ToList();
         }
-        else
-        {
-            Console.WriteLine("The results list is empty.");
-            return;
-        }
-        showMap = true;
-        StateHasChanged();
-        //delay for DOM update
-        await Task.Delay(100);
-        await JSRuntime.InvokeVoidAsync("getMap", crimeData);
+
+        return new List<object>();
+    }
+
+    public void CountCategories()
+    {
+        ApplicationState.categoryCounts = ApplicationState.crimeResults
+            .GroupBy(ci => ci.category)
+            .ToDictionary(g => g.Key, g => g.Count());
+    }
+
+    public void CountStreets()
+    {
+        ApplicationState.streetCounts = ApplicationState.crimeResults
+            .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
+            .Select(g => new StreetCrimeData
+                {
+                    StreetName = g.Key.Name,
+                    CrimeCount = g.Count(),
+                    Latitude = g.Key.latitude,
+                    Longitude = g.Key.longitude,
+                    Crimes = string.Join(", ", g.Select(ci => ci.category)),
+                    CrimeCountsByType = g.GroupBy(ci => ci.category).ToDictionary(grp => grp.Key, grp => grp.Count())
+                }).ToList();
     }
 
     public void CountCategoriesArchive()
     {
-        categoryCounts = archiveDataResult
+        ApplicationState.categoryCounts = ApplicationState.archiveDataResult
             .GroupBy(ci => ci.CrimeType)
             .ToDictionary(g => g.Key, g => g.Count());
     }
 
     public void CountStreetsArchive()
     {
-        streetCounts = archiveDataResult
+        ApplicationState.streetCounts = ApplicationState.archiveDataResult
             .GroupBy(ci => new { ci.Street, ci.Latitude, ci.Longitude })
             .Select(g => new StreetCrimeData
                 {
@@ -193,34 +248,10 @@ else
                     Longitude = g.Key.Longitude.ToString(),
                     Crimes = string.Join(", ", g.Select(ci => ci.CrimeType)),
                     CrimeCountsByType = g.GroupBy(ci => ci.CrimeType).ToDictionary(grp => grp.Key, grp => grp.Count())
-                })
-            .ToList();
-    }
-
-    public void CountCategories()
-    {
-        categoryCounts = crimeResults
-            .GroupBy(ci => ci.category)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-
-    public void CountStreets()
-    {
-        streetCounts = crimeResults
-            .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
-            .Select(g => new StreetCrimeData
-                {
-                    StreetName = g.Key.Name,
-                    CrimeCount = g.Count(),
-                    Latitude = g.Key.latitude,
-                    Longitude = g.Key.longitude,
-                    Crimes = string.Join(", ", g.Select(ci => ci.category)),
-                    CrimeCountsByType = g.GroupBy(ci => ci.category)
-                                                                         .ToDictionary(grp => grp.Key, grp => grp.Count())
-                })
-            .ToList();
+                }).ToList();
     }
 }
+
 <script>
     window.getMap = function (crimeData) {
         if (!crimeData || crimeData.length === 0) {
@@ -291,8 +322,8 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                                                                <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
-                                                                                                        </svg>`,
+                                                                                                                    <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
+                                                                                                            </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
                     position: markerPosition
@@ -307,3 +338,4 @@ else
         });
     }
 </script>
+
