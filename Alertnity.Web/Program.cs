@@ -10,8 +10,6 @@ var builder = WebApplication.CreateBuilder(args);
 //AppState registering
 builder.Services.AddSingleton<AppState>();
 
-
-
 // Add Blazorise services to the container.
 builder.Services
     .AddBlazorise(options =>

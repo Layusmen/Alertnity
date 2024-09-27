@@ -1,13 +1,16 @@
 ﻿@page "/"
+
 @using Alertnity;
 @using Alertnity.ArchiveDataAnalysis;
 @using Alertnity.PoliceApi;
 @using System.ComponentModel.DataAnnotations;
 @using System.Globalization;
 @using Alertnity.PostcodeApi;
+@using Alertnity.Web.Components.Pages.CrimeAnalysis
 @using Alertnity.Web.Models;
 @inject IJSRuntime JSRuntime;
 @using Blazorise;
+@using Blazorise.LoadingIndicator
 @using CsvHelper;
 @using CsvHelper.Configuration;
 @using Microsoft.AspNetCore.Components.Web.Extensions;
@@ -19,7 +22,7 @@
     </div>
 
     <div class="container mt-5 d-flex flex-column align-items-center justify-content-center greeting">
-        <h1 class="fw-bolder" style="color: rgb(190,64,210);">Welcome to Comtity!</h1>
+        <h1 class="fw-bolder " style="color: rgb(190,64,210);">Welcome to Comtity!</h1>
         <h1 class="fw-bolder p-3" style="color: #800080;">Community Security Watch and Crime Monitoring</h1>
     </div>
 
@@ -27,7 +30,7 @@
         <EditForm Model="@ApplicationState.formInfo" OnValidSubmit="FormSubmitted">
             <DataAnnotationsValidator />
             <div class="mb-3">
-                <label for="postcode" class="form-label h5 fw-bold" style="color:  #800080">Postcode</label>
+                <label for="postcode" class="form-label h5 fw-bold" style="color: #800080">Postcode</label>
                 <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="ApplicationState.formInfo.Postcode" />
                 <ValidationMessage For="@(() => ApplicationState.formInfo.Postcode)" />
                 <div class="form-text">
@@ -45,51 +48,56 @@
             </div>
             <button type="submit" class="btn" style="background-color:#800080; color: white;">Submit</button>
         </EditForm>
+
+
+
     </div>
 </div>
+<LoadingIndicator @ref="loadingIndicator">
+    <!-- Crime Map Display -->
+    @if (ApplicationState.showMap)
+    {
+        <CrimeMap />
+    }
 
-<!-- Crime Map Display -->
-@if (ApplicationState.showMap)
-{
-    <CrimeMap/>
-}
+    @if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
+    {
+        <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
 
-@if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
-{
-    <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
-    <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
+        <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
+        <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
 
-    <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
-    <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
+        <CrimeRecordTable results="@ApplicationState.crimeResults" FormInfo="@ApplicationState.formInfo" />
+    }
+    else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
+    {
+        <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
 
-    <CrimeRecordTable results="@ApplicationState.crimeResults" FormInfo="@ApplicationState.formInfo" />
-}
-else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
-{
-    <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
-    <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
+        <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
+        <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
 
-    <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
-    <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
-
-    <CrimeRecordTable archiveDataResult="@ApplicationState.archiveDataResult" FormInfo="@ApplicationState.formInfo" />
-}
-else
-{
-    Console.WriteLine("No Data Passed into the result. Check the API, and make sure the date inserted is within the range");
-}
-
+        <CrimeRecordTable archiveDataResult="@ApplicationState.archiveDataResult" FormInfo="@ApplicationState.formInfo" />
+    }
+    else
+    {
+        Console.WriteLine("No Data Passed into the result. Check the API, and make sure the date inserted is within the range");
+    }
+</LoadingIndicator>
 @code
 {
     private bool showMap = false;
+    private LoadingIndicator loadingIndicator;
 
     [Inject]
     public AppState ApplicationState { get; set; }
 
     private bool isFirstRender = true;
-    
+
     public async Task FormSubmitted()
     {
+        await loadingIndicator.Show();
         DateTime? startDate = ApplicationState.formInfo.DateRange[0];
         DateTime? endDate = ApplicationState.formInfo.DateRange.Count > 1 ? ApplicationState.formInfo.DateRange[1] : null;
 
@@ -102,17 +110,17 @@ else
             if (year >= 2020)
             {
                 ApplicationState.crimeResults = ApiMethods.CheckPostcodeCrimeRate(ApplicationState.formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
-                
+
             }
             else
             {
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(ApplicationState.formInfo.Postcode);
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
                 ApplicationState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
-            
+
             }
 
-            StateHasChanged();  
+            StateHasChanged();
         }
         else
         {
@@ -141,15 +149,16 @@ else
         }
 
         ApplicationState.showMap = true;
-        StateHasChanged();  
+        StateHasChanged();
 
         // Save the state to session storage
-        
+
         await ProtectedSessionStorage.SetAsync("ApplicationState", ApplicationState);
 
         // Delay for DOM update
-        await Task.Delay(100);  
+        await Task.Delay(3000);
         await JSRuntime.InvokeVoidAsync("getMap", GenerateCrimeDataForMap());
+        await loadingIndicator.Hide();
     }
 
     protected override async Task OnAfterRenderAsync(bool firstRender)
@@ -160,7 +169,7 @@ else
 
             // Load the application state from session storage
             var storedState = await ProtectedSessionStorage.GetAsync<AppState>("ApplicationState");
-            
+
             if (storedState.Success && storedState.Value != null)
             {
                 ApplicationState = storedState.Value;
@@ -250,6 +259,7 @@ else
                     CrimeCountsByType = g.GroupBy(ci => ci.CrimeType).ToDictionary(grp => grp.Key, grp => grp.Count())
                 }).ToList();
     }
+
 }
 
 <script>
@@ -322,8 +332,8 @@ else
 
                 var marker = new atlas.HtmlMarker({
                     htmlContent: `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="80" viewBox="0 0 200 80" xml:space="preserve"><rect x="0" y="0" rx="8" ry="8" width="200" height="60" fill="purple"/>
-                                                                                                                    <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
-                                                                                                            </svg>`,
+                                                                                                                        <polygon fill="purple" points="10,59 190,59 100,80 10,59"/><text x="100" y="40" style="font-size:12px;font-family:arial;fill:#ffffff;" text-anchor="middle">Crime(s) Recorded: ${crime.count}</text><text x="100" y="20" style="font-size:14px;font-family:arial;fill:#ffffff;" text-anchor="middle">${crime.street}</text>
+                                                                                                                </svg>`,
                     color: '',
                     text: `${crime.street} <br>"Crime Recorded:" ${crime.count.toString()}`,
                     position: markerPosition

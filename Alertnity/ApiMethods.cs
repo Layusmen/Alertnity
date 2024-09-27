@@ -115,10 +115,10 @@ namespace Alertnity
 
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime startDateTime, DateTime? endDateTime)
         {
-            // If endDateTime is null
+            // Checking if endDateTime is null
             DateTime actualEndDate = endDateTime ?? startDateTime;
 
-            // Get the months between start and end dates
+            // Getting the months between start and end dates
             List<string> months = GetMonthsBetween(startDateTime, actualEndDate);
 
             // Fetch nearest postcodes

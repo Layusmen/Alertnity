@@ -1,15 +1,14 @@
 ﻿@inherits LayoutComponentBase
 
-<div class="page">
+<div class="page" style="background-color:  #faf9f6;">
     <main>
         <NavMenu />
-        <article class="content px-4" style="background-color:  #faf9f6;">
-
+        <article class="content px-4" >
             <CascadingValue Value="@ApplicationState">
                 @Body
             </CascadingValue>
-       
         </article>
+        <FooterNav />
     </main>
 </div>
 

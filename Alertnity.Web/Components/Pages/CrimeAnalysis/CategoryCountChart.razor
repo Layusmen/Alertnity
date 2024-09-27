@@ -8,10 +8,7 @@
     </div>
 </div>
 
-
-
 @code {
-    
 
     [Parameter]
     public Dictionary<string, int> categoryCounts { get; set; } = new();
@@ -30,10 +27,11 @@
 
 }
 <script>
-   
     window.createDoughnutChart = (canvasId, labels, data) => {
-        
         var ctx = document.getElementById(canvasId).getContext('2d');
+
+        // Calculate total value of all data points
+        const total = data.reduce((acc, value) => acc + value, 0);
 
         // Chart data
         const chartData = {
@@ -41,14 +39,6 @@
             datasets: [{
                 label: 'Crimes by Category',
                 data: data,
-                options: {
-                    responsive: true,
-                    plugins: {
-                        legend: {
-                            position: 'bottom',
-                        },
-                    }
-                },
                 backgroundColor: [
                     'rgba(255, 99, 132)',
                     'rgba(54, 162, 235)',
@@ -56,7 +46,6 @@
                     'rgba(75, 192, 192)',
                     'rgba(153, 102, 255)'
                 ],
-
                 hoverOffset: 8
             }]
         };
@@ -65,10 +54,29 @@
         const config = {
             type: 'doughnut',
             data: chartData,
+            options: {
+                responsive: true,
+                plugins: {
+                    legend: {
+                        position: 'bottom',
+                    },
+                    tooltip: {
+                        callbacks: {
+                            label: function (tooltipItem) {
+                                // Get the value and calculate percentage
+                                var value = tooltipItem.raw;
+                                var percentage = ((value / total) * 100).toFixed(2);
+
+                                // Tooltip label value and percentage
+                                return `${tooltipItem.label}: ${value} (${percentage}%)`;
+                            }
+                        }
+                    }
+                }
+            }
         };
 
         // Create and render the chart
         new Chart(ctx, config);
     };
-
 </script>
