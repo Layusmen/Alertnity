@@ -23,7 +23,6 @@ namespace Alertnity
                 return postcodeApiResponseValue;
             }
         }
-
         public static List<PostcodeConverter> SavePostcodeApiResponse(PostcodeApiResponse postcodeApiResponseValue)
         {
 
@@ -51,13 +50,11 @@ namespace Alertnity
             }
             return converters;
         }
-
         public static string CreatePolyParameter(List<PostcodeConverter> converters)
         {
             var polyParts = converters.Select(c => $"{c.Latitude},{c.Longitude}");
             return string.Join(":", polyParts);
         }
-
         public static Outcome[] PoliceApiReturnJson(string Url)
         { 
             using (var client = new HttpClient())
@@ -81,7 +78,6 @@ namespace Alertnity
                 return null;
             }
         }
-
         public static List<CrimeInfo> ProcessCrimeIncidents(Outcome[] crimeIncidents)
         {
             List<CrimeInfo> crimeInfos = new List<CrimeInfo>();
@@ -112,7 +108,6 @@ namespace Alertnity
 
             return crimeInfos;
         }
-
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime startDateTime, DateTime? endDateTime)
         {
             // Checking if endDateTime is null
@@ -163,7 +158,6 @@ namespace Alertnity
             // Return all processed crime info, even if some months had no data
             return allCrimeInfo;
         }
-
         public static List<string> GetMonthsBetween(DateTime startDate, DateTime endDate)
         {
             var monthResult = new List<string>();
@@ -200,8 +194,6 @@ namespace Alertnity
 
             return monthResult;
         }
-
-
     }
 
 }

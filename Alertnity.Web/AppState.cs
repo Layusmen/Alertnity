@@ -11,6 +11,6 @@ namespace Alertnity.Web
         public List<CrimeRecord> archiveDataResult { get; set; } = new();
         public Dictionary<string, int> categoryCounts { get; set; } = new();
         public List<StreetCrimeData> streetCounts { get; set; } = new();
-        public bool showMap { get; set; } = false; //
+        public bool showMap { get; set; } = false;
     }
 }

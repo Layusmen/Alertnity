@@ -110,14 +110,12 @@
             if (year >= 2020)
             {
                 ApplicationState.crimeResults = ApiMethods.CheckPostcodeCrimeRate(ApplicationState.formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
-
             }
             else
             {
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(ApplicationState.formInfo.Postcode);
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
                 ApplicationState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
-
             }
 
             StateHasChanged();
@@ -152,7 +150,6 @@
         StateHasChanged();
 
         // Save the state to session storage
-
         await ProtectedSessionStorage.SetAsync("ApplicationState", ApplicationState);
 
         // Delay for DOM update
