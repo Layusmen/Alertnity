@@ -41,7 +41,6 @@ namespace Alertnity
                     UIMethods.DisplayPostCodeConverterResponse(converter);
 
                     converters.Add(converter);
-
                 }
             }
             else
@@ -50,17 +49,21 @@ namespace Alertnity
             }
             return converters;
         }
+        
         public static string CreatePolyParameter(List<PostcodeConverter> converters)
         {
             var polyParts = converters.Select(c => $"{c.Latitude},{c.Longitude}");
             return string.Join(":", polyParts);
         }
+        
         public static Outcome[] PoliceApiReturnJson(string Url)
         { 
             using (var client = new HttpClient())
             {
                 var endpoint = new Uri(Url);
+
                 var result = client.GetAsync(endpoint).Result;
+
                 if(result.StatusCode == HttpStatusCode.OK)
                 {
                     var json = result.Content.ReadAsStringAsync().Result;
@@ -71,13 +74,10 @@ namespace Alertnity
                     });
                     return crimeIncidents;
                 }
-                else
-                {
-
-                }
                 return null;
             }
         }
+        
         public static List<CrimeInfo> ProcessCrimeIncidents(Outcome[] crimeIncidents)
         {
             List<CrimeInfo> crimeInfos = new List<CrimeInfo>();
@@ -96,7 +96,6 @@ namespace Alertnity
                         id = crimeIncident.id,
                         location_type = crimeIncident.location_type,
                         month = crimeIncident.month,
-
                     };
                     crimeInfos.Add(crimeInfo);
                 }
@@ -105,9 +104,9 @@ namespace Alertnity
             {
                 Console.WriteLine("Nothing found");
             }
-
             return crimeInfos;
         }
+        
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime startDateTime, DateTime? endDateTime)
         {
             // Checking if endDateTime is null
@@ -158,6 +157,7 @@ namespace Alertnity
             // Return all processed crime info, even if some months had no data
             return allCrimeInfo;
         }
+        
         public static List<string> GetMonthsBetween(DateTime startDate, DateTime endDate)
         {
             var monthResult = new List<string>();
