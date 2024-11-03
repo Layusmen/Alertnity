@@ -3,7 +3,7 @@ using System.Globalization;
 
 namespace Alertnity
 {
-    internal class UserInputMethods
+    internal class UserTestMethods
     {
         public static UserInfo CreateUserInfo()
         {

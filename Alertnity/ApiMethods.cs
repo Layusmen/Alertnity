@@ -32,21 +32,21 @@ namespace Alertnity
             {
                 foreach (var result in postcodeApiResponseValue.Result)
                 {
-                    PostcodeConverter converter = new PostcodeConverter
+                    PostcodeConverter converter = new()
                     {
                         Latitude = result.latitude,
                         Longitude = result.longitude
                     };
+
+                    UIMethods.DisplayPostCodeConverterResponse(converter);
+
                     converters.Add(converter);
 
-                    Console.WriteLine("Longitude: " + result.longitude);
-                    Console.WriteLine("Latitude: " + result.latitude);
-                    Console.WriteLine("............................");
                 }
             }
             else
             {
-                Console.WriteLine("Response is null or nothing contained in the api.");
+                UIMethods.DisplayNullResponse();
             }
             return converters;
         }
