@@ -54,8 +54,7 @@ namespace Alertnity
         {
             var polyParts = converters.Select(c => $"{c.Latitude},{c.Longitude}");
             return string.Join(":", polyParts);
-        }
-        
+        }        
         public static Outcome[] PoliceApiReturnJson(string Url)
         { 
             using (var client = new HttpClient())
@@ -77,7 +76,6 @@ namespace Alertnity
                 return null;
             }
         }
-        
         public static List<CrimeInfo> ProcessCrimeIncidents(Outcome[] crimeIncidents)
         {
             List<CrimeInfo> crimeInfos = new List<CrimeInfo>();
@@ -102,11 +100,10 @@ namespace Alertnity
             }
             else
             {
-                Console.WriteLine("Nothing found");
+                UIMethods.DisplayNullResponse();
             }
             return crimeInfos;
         }
-        
         public static List<CrimeInfo> CheckPostcodeCrimeRate(string insertPostcode, DateTime startDateTime, DateTime? endDateTime)
         {
             // Checking if endDateTime is null
@@ -128,7 +125,7 @@ namespace Alertnity
             {
                 string poly = ApiMethods.CreatePolyParameter(converters);
                 string crimeUrl = $"https://data.police.uk/api/crimes-street/all-crime?poly={poly}&date={month}";
-                Console.WriteLine($"Checking data for: {crimeUrl}");
+                UIMethods.UrlPrint(crimeUrl);
 
                 try
                 {
@@ -138,7 +135,7 @@ namespace Alertnity
                     // continue with the next month if no result for the present month.
                     if (crimeIncidents == null || crimeIncidents.Length == 0)
                     {
-                        Console.WriteLine($"No data returned for {month}, continuing to next month.");
+                        UIMethods.MonthPrint(month);
                         continue;
                     }
 
@@ -149,7 +146,8 @@ namespace Alertnity
                 catch (Exception ex)
                 {
                     // Log the error 
-                    Console.WriteLine($"Error fetching data for {month}: {ex.Message}");
+                    //Console.WriteLine($"Error fetching data for {month}: {ex.Message}");
+                    UIMethods.MonthErrorLog(month, ex);
                     continue; 
                 }
             }
@@ -157,7 +155,6 @@ namespace Alertnity
             // Return all processed crime info, even if some months had no data
             return allCrimeInfo;
         }
-        
         public static List<string> GetMonthsBetween(DateTime startDate, DateTime endDate)
         {
             var monthResult = new List<string>();
@@ -179,7 +176,8 @@ namespace Alertnity
                     // Skip if the month is in the future
                     if (insertDate > DateTime.Now)
                     {
-                        Console.WriteLine($"Skipping future date: {insertDate.ToString("yyyy-MM")}");
+                        //Console.WriteLine($"Skipping future date: {insertDate.ToString("yyyy-MM")}");
+                        UIMethods.SkippingFutureDatePrint(insertDate);
                         continue;
                     }
 
@@ -189,12 +187,11 @@ namespace Alertnity
             }
             else
             {
-                Console.WriteLine("Invalid date range.");
+                //Console.WriteLine("Invalid date range.");
+                UIMethods.InvalidDateRangePrint();
             }
-
             return monthResult;
         }
     }
-
 }
 
