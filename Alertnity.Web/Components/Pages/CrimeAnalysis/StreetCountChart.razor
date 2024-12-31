@@ -15,10 +15,8 @@
     {
         if (firstRender)
         {
-            
             var labels = streetCounts.Select(s => s.StreetName).ToArray();
             var data = streetCounts.Select(s => s.CrimeCount).ToArray();
-
             // Call the JavaScript InterOp
             await JSRuntime.InvokeVoidAsync("createBarChart", "BarChart", labels, data);
         }

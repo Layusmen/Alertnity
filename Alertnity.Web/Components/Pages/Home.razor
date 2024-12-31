@@ -52,12 +52,12 @@
     </div>
 </div>
 <LoadingIndicator @ref="loadingIndicator">
+    
     <!-- Crime Map Display -->
     @if (ApplicationState.showMap)
     {
         <CrimeMap />
     }
-
     @if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
     {
         <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
@@ -85,13 +85,13 @@
 </LoadingIndicator>
 @code
 {
-    private bool showMap = false;
+    //private bool showMap = false;
     private LoadingIndicator loadingIndicator;
 
     [Inject]
     public AppState ApplicationState { get; set; }
 
-    private bool isFirstRender = true;
+    //private bool isFirstRender = true;
 
     public async Task FormSubmitted()
     {
