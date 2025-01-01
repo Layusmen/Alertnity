@@ -14,7 +14,10 @@
 @using CsvHelper;
 @using CsvHelper.Configuration;
 @using Microsoft.AspNetCore.Components.Web.Extensions;
+@using Services;
 @inject ProtectedSessionStorage ProtectedSessionStorage;
+@inject CrimeCountingServices crimeCountingServices;
+
 
 <div class="pb-5 pt-5" style="background-color:  #faf9f6;">
     <div class="container mt-2 d-flex align-items-center justify-content-center">
@@ -27,12 +30,12 @@
     </div>
 
     <div class="container mt-2 d-flex align-items-center justify-content-center">
-        <EditForm Model="@ApplicationState.formInfo" OnValidSubmit="FormSubmitted">
+        <EditForm Model="@appState.formInfo" OnValidSubmit="FormSubmitted">
             <DataAnnotationsValidator />
             <div class="mb-3">
                 <label for="postcode" class="form-label h5 fw-bold" style="color: #800080">Postcode</label>
-                <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="ApplicationState.formInfo.Postcode" />
-                <ValidationMessage For="@(() => ApplicationState.formInfo.Postcode)" />
+                <InputText id="postcode" class="form-control" Placeholder="Postcode" @bind-Value="appState.formInfo.Postcode" />
+                <ValidationMessage For="@(() => appState.formInfo.Postcode)" />
                 <div class="form-text">
                     Please Insert Postcode in this format: PO148B
                 </div>
@@ -40,8 +43,8 @@
 
             <div class="mb-3">
                 <label for="date" class="form-label h5 fw-bold" style="color:#800080">Pick Date To Check</label>
-                <DatePicker TValue="DateTime?" @bind-Dates="@ApplicationState.formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
-                <ValidationMessage For="@(() => ApplicationState.formInfo.DateRange)" />
+                <DatePicker TValue="DateTime?" @bind-Dates="@appState.formInfo.DateRange" InputMode="DateInputMode.Date" SelectionMode="DateInputSelectionMode.Range" StaticPicker="false" />
+                <ValidationMessage For="@(() => appState.formInfo.DateRange)" />
                 <div class="form-text">
                     Insert month range or a single month.
                 </div>
@@ -54,29 +57,29 @@
 <LoadingIndicator @ref="loadingIndicator">
     
     <!-- Crime Map Display -->
-    @if (ApplicationState.showMap)
+    @if (appState.showMap)
     {
         <CrimeMap />
     }
-    @if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
+    @if (appState.crimeResults != null && appState.crimeResults.Any())
     {
-        <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
-        <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
+        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-        <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
-        <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
+        <StreetCountTable streetCounts="@appState.streetCounts" />
+        <StreetCountChart streetCounts="@appState.streetCounts" />
 
-        <CrimeRecordTable results="@ApplicationState.crimeResults" FormInfo="@ApplicationState.formInfo" />
+        <CrimeRecordTable results="@appState.crimeResults" FormInfo="@appState.formInfo" />
     }
-    else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
+    else if (appState.archiveDataResult != null && appState.archiveDataResult.Any())
     {
-        <CategoryCountTable categoryCounts="@ApplicationState.categoryCounts" />
-        <CategoryCountChart categoryCounts="@ApplicationState.categoryCounts" />
+        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-        <StreetCountTable streetCounts="@ApplicationState.streetCounts" />
-        <StreetCountChart streetCounts="@ApplicationState.streetCounts" />
+        <StreetCountTable streetCounts="@appState.streetCounts" />
+        <StreetCountChart streetCounts="@appState.streetCounts" />
 
-        <CrimeRecordTable archiveDataResult="@ApplicationState.archiveDataResult" FormInfo="@ApplicationState.formInfo" />
+        <CrimeRecordTable archiveDataResult="@appState.archiveDataResult" FormInfo="@appState.formInfo" />
     }
     else
     {
@@ -89,17 +92,17 @@
     private LoadingIndicator loadingIndicator;
 
     [Inject]
-    public AppState ApplicationState { get; set; }
+    public AppState appState { get; set; }
 
     //private bool isFirstRender = true;
 
     public async Task FormSubmitted()
     {
         await loadingIndicator.Show();
-        DateTime? startDate = ApplicationState.formInfo.DateRange[0];
-        DateTime? endDate = ApplicationState.formInfo.DateRange.Count > 1 ? ApplicationState.formInfo.DateRange[1] : null;
+        DateTime? startDate = appState.formInfo.DateRange[0];
+        DateTime? endDate = appState.formInfo.DateRange.Count > 1 ? appState.formInfo.DateRange[1] : null;
 
-        Console.WriteLine($"Submitted Postcode: {ApplicationState.formInfo.Postcode}");
+        Console.WriteLine($"Submitted Postcode: {appState.formInfo.Postcode}");
         Console.WriteLine($"Submitted Date: {startDate?.ToString("yyyy-MM-dd")} and {(endDate.HasValue ? endDate.Value.ToString("yyyy-MM-dd") : "No End Date Selected")}");
 
         if (startDate.HasValue)
@@ -107,13 +110,13 @@
             int year = startDate.Value.Year;
             if (year >= 2020)
             {
-                ApplicationState.crimeResults = ApiMethods.CheckPostcodeCrimeRate(ApplicationState.formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
+                appState.crimeResults = ApiMethods.CheckPostcodeCrimeRate(appState.formInfo.Postcode, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
             else
             {
-                PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(ApplicationState.formInfo.Postcode);
+                PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(appState.formInfo.Postcode);
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
-                ApplicationState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
+                appState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
 
             StateHasChanged();
@@ -125,18 +128,18 @@
         }
 
         // Process crimeResults
-        if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
+        if (appState.crimeResults != null && appState.crimeResults.Any())
         {
-            Console.WriteLine($"crimeResults count: {ApplicationState.crimeResults.Count}");
-            CountCategories();
-            CountStreets();
+            Console.WriteLine($"crimeResults count: {appState.crimeResults.Count}");
+            crimeCountingServices.CountCategories();
+            crimeCountingServices.CountStreets();
         }
         // Process archiveDataResult
-        else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
+        else if (appState.archiveDataResult != null && appState.archiveDataResult.Any())
         {
-            Console.WriteLine($"archiveDataResult count: {ApplicationState.archiveDataResult.Count}");
-            CountCategoriesArchive();
-            CountStreetsArchive();
+            Console.WriteLine($"archiveDataResult count: {appState.archiveDataResult.Count}");
+            crimeCountingServices.CountCategoriesArchive();
+            crimeCountingServices.CountStreetsArchive();
         }
         else
         {
@@ -144,11 +147,11 @@
             return;
         }
 
-        ApplicationState.showMap = true;
+        appState.showMap = true;
         StateHasChanged();
 
         // Save the state to session storage
-        await ProtectedSessionStorage.SetAsync("ApplicationState", ApplicationState);
+        await ProtectedSessionStorage.SetAsync("ApplicationState", appState);
 
         // Delay for DOM update
         await Task.Delay(3000);
@@ -167,14 +170,14 @@
 
             if (storedState.Success && storedState.Value != null)
             {
-                ApplicationState = storedState.Value;
+                appState = storedState.Value;
             }
             else
             {
                 Console.WriteLine("No data found in session storage.");
             }
 
-            if (ApplicationState.showMap)
+            if (appState.showMap)
             {
                 await JSRuntime.InvokeVoidAsync("getMap", GenerateCrimeDataForMap());
             }
@@ -183,78 +186,32 @@
 
     private List<object> GenerateCrimeDataForMap()
     {
-        if (ApplicationState.crimeResults != null && ApplicationState.crimeResults.Any())
+        if (appState.crimeResults != null && appState.crimeResults.Any())
         {
-            return ApplicationState.crimeResults.Select(ci => new
+            return appState.crimeResults.Select(ci => new
             {
                 Longitude = float.Parse(ci.location.longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.location.latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.location.street.Name,
-                Count = ApplicationState.crimeResults.Count(c => c.location.longitude == ci.location.longitude
+                Count = appState.crimeResults.Count(c => c.location.longitude == ci.location.longitude
                     && c.location.latitude == ci.location.latitude
                     && c.location.street.Name == ci.location.street.Name)
             }).Cast<object>().ToList();
         }
-        else if (ApplicationState.archiveDataResult != null && ApplicationState.archiveDataResult.Any())
+        else if (appState.archiveDataResult != null && appState.archiveDataResult.Any())
         {
-            return ApplicationState.archiveDataResult.Select(ci => new
+            return appState.archiveDataResult.Select(ci => new
             {
                 Longitude = float.Parse(ci.Longitude.ToString(CultureInfo.InvariantCulture)),
                 Latitude = float.Parse(ci.Latitude.ToString(CultureInfo.InvariantCulture)),
                 Street = ci.Street,
-                Count = ApplicationState.archiveDataResult.Count(c => c.Longitude == ci.Longitude
+                Count = appState.archiveDataResult.Count(c => c.Longitude == ci.Longitude
                     && c.Latitude == ci.Latitude
                     && ci.Street == c.Street)
             }).Cast<object>().ToList();
         }
-
         return new List<object>();
     }
-
-    public void CountCategories()
-    {
-        ApplicationState.categoryCounts = ApplicationState.crimeResults
-            .GroupBy(ci => ci.category)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-
-    public void CountStreets()
-    {
-        ApplicationState.streetCounts = ApplicationState.crimeResults
-            .GroupBy(ci => new { ci.location?.street?.Name, ci.location?.latitude, ci.location?.longitude })
-            .Select(g => new StreetCrimeData
-                {
-                    StreetName = g.Key.Name,
-                    CrimeCount = g.Count(),
-                    Latitude = g.Key.latitude,
-                    Longitude = g.Key.longitude,
-                    Crimes = string.Join(", ", g.Select(ci => ci.category)),
-                    CrimeCountsByType = g.GroupBy(ci => ci.category).ToDictionary(grp => grp.Key, grp => grp.Count())
-                }).ToList();
-    }
-
-    public void CountCategoriesArchive()
-    {
-        ApplicationState.categoryCounts = ApplicationState.archiveDataResult
-            .GroupBy(ci => ci.CrimeType)
-            .ToDictionary(g => g.Key, g => g.Count());
-    }
-
-    public void CountStreetsArchive()
-    {
-        ApplicationState.streetCounts = ApplicationState.archiveDataResult
-            .GroupBy(ci => new { ci.Street, ci.Latitude, ci.Longitude })
-            .Select(g => new StreetCrimeData
-                {
-                    StreetName = g.Key.Street,
-                    CrimeCount = g.Count(),
-                    Latitude = g.Key.Latitude.ToString(),
-                    Longitude = g.Key.Longitude.ToString(),
-                    Crimes = string.Join(", ", g.Select(ci => ci.CrimeType)),
-                    CrimeCountsByType = g.GroupBy(ci => ci.CrimeType).ToDictionary(grp => grp.Key, grp => grp.Count())
-                }).ToList();
-    }
-
 }
 
 <script>

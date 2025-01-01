@@ -1,5 +1,5 @@
-using Alertnity.Web;
 using Alertnity.Web.Components;
+using Alertnity.Web.Services;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
@@ -9,6 +9,9 @@ var builder = WebApplication.CreateBuilder(args);
 
 //AppState registering
 builder.Services.AddSingleton<AppState>();
+
+//CrimeCountingServices registering
+builder.Services.AddScoped<CrimeCountingServices>();
 
 // Add Blazorise services to the container.
 builder.Services

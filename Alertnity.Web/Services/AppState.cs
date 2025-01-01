@@ -2,7 +2,7 @@
 using Alertnity.PoliceApi;
 using Alertnity.Web.Models;
 
-namespace Alertnity.Web
+namespace Alertnity.Web.Services
 {
     public class AppState
     {
