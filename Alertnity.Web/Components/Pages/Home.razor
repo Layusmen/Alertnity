@@ -18,17 +18,14 @@
 @inject ProtectedSessionStorage ProtectedSessionStorage;
 @inject CrimeCountingServices crimeCountingServices;
 
-
 <div class="pb-5 pt-5" style="background-color:  #faf9f6;">
     <div class="container mt-2 d-flex align-items-center justify-content-center">
         <Image Source="bootstrap/Images/comtitynew.png" Text="Comtity" />
     </div>
-
     <div class="container mt-5 d-flex flex-column align-items-center justify-content-center greeting">
         <h1 class="fw-bolder " style="color: rgb(190,64,210);">Welcome to Comtity!</h1>
         <h1 class="fw-bolder p-3" style="color: #800080;">Community Security Watch and Crime Monitoring</h1>
     </div>
-
     <div class="container mt-2 d-flex align-items-center justify-content-center">
         <EditForm Model="@appState.formInfo" OnValidSubmit="FormSubmitted">
             <DataAnnotationsValidator />
@@ -88,14 +85,9 @@
 </LoadingIndicator>
 @code
 {
-    //private bool showMap = false;
-    private LoadingIndicator loadingIndicator;
-
     [Inject]
     public AppState appState { get; set; }
-
-    //private bool isFirstRender = true;
-
+    private LoadingIndicator loadingIndicator;
     public async Task FormSubmitted()
     {
         await loadingIndicator.Show();
@@ -158,7 +150,6 @@
         await JSRuntime.InvokeVoidAsync("getMap", GenerateCrimeDataForMap());
         await loadingIndicator.Hide();
     }
-
     protected override async Task OnAfterRenderAsync(bool firstRender)
     {
         if (firstRender)
@@ -183,7 +174,6 @@
             }
         }
     }
-
     private List<object> GenerateCrimeDataForMap()
     {
         if (appState.crimeResults != null && appState.crimeResults.Any())
