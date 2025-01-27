@@ -11,6 +11,7 @@ using Alertnity.PoliceApi;
 using Blazorise.Utilities;
 using System.Text.Json;
 using CsvHelper.TypeConversion;
+using System.ComponentModel.DataAnnotations;
 
 namespace Alertnity.ArchiveDataAnalysis
 {
@@ -25,7 +26,7 @@ namespace Alertnity.ArchiveDataAnalysis
             Result postcodeApiResponseValue = null;
 
             // converter to store the results
-            PostcodeConverter converter = new PostcodeConverter();
+            PostcodeConverter converter = new();
 
             try
             {
@@ -176,4 +177,5 @@ namespace Alertnity.ArchiveDataAnalysis
         }
 
     }
+   
 }

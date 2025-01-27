@@ -1,7 +1,7 @@
 ﻿using System.ComponentModel.DataAnnotations;
 using System.Globalization;
 
-namespace Alertnity.Web.Models
+namespace Alertnity
 {
     public class CrimeCheckModel
     {
@@ -19,6 +19,7 @@ namespace Alertnity.Web.Models
         {
             return DateRange.Count > 1 && DateRange[1].HasValue ? DateRange[1]?.ToString("yyyy-MM") : string.Empty;
         }
+
 
     }
 }
