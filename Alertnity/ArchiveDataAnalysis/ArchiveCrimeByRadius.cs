@@ -20,7 +20,7 @@ namespace Alertnity.ArchiveDataAnalysis
         public static PostcodeConverter GetPostcodeForArchiveData(string insertPostcode)
         {
             // URL for the API request
-            var url = $"https://api.postcodes.io/postcodes/{insertPostcode}";
+            var url = $"{Constants.POSTCODES_IO_URL}/{insertPostcode}";
 
             // API response
             Result postcodeApiResponseValue = null;
@@ -44,7 +44,6 @@ namespace Alertnity.ArchiveDataAnalysis
                         // Output the raw JSON for inspection
                         Console.WriteLine("Raw JSON Response:");
                         Console.WriteLine(json);
-
 
                         var Root = JsonSerializer.Deserialize<Root>(json, new JsonSerializerOptions
                         {
@@ -78,7 +77,7 @@ namespace Alertnity.ArchiveDataAnalysis
         }
         public static bool IsFileInRange(string fileName, string adminDistrict, string secondKeyword, DateTime fileDate, DateTime startDateTime, DateTime endDateTime)
         {
-            // Compare only year and month
+            // Comparing only year and month
             bool isDateInRange = (fileDate.Year > startDateTime.Year ||
                                  (fileDate.Year == startDateTime.Year && fileDate.Month >= startDateTime.Month)) &&
                                  (fileDate.Year < endDateTime.Year ||
@@ -91,10 +90,8 @@ namespace Alertnity.ArchiveDataAnalysis
 
             return isDateInRange && containsAdminDistrict && containsSecondKeyword;
         }
-
         public static List<CrimeRecord> ProcessDirectory(PostcodeConverter converter, string directoryPath, DateTime startDateTime, DateTime? endDateTime)
         {
-            double radiusMeters = 300.0;
             double Latitude = converter.Latitude;
             double Longitude = converter.Longitude;
             string? adminDistrict = converter.PFA;
@@ -109,7 +106,7 @@ namespace Alertnity.ArchiveDataAnalysis
             {
                 string[] subdirectories = Directory.GetDirectories(directoryPath, "*", SearchOption.AllDirectories);
 
-                if (subdirectories.Length > 0)
+                if (subdirectories.Length > Constants.FALSE)
                 {
                     foreach (string subdirectory in subdirectories)
                     {
@@ -121,7 +118,7 @@ namespace Alertnity.ArchiveDataAnalysis
                             DateTime fileDate;
 
                             // Parse the file date from the file name
-                            if (DateTime.TryParseExact(fileName.Substring(0, 7), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
+                            if (DateTime.TryParseExact(fileName.Substring(Constants.FALSE, Constants.SEVEN), "yyyy-MM", null, DateTimeStyles.None, out fileDate))
                             {
                                 // Check if the file is in the date range and matche keywords
                                 if (ArchiveCrimeByRadius.IsFileInRange(fileName, adminDistrict, secondKeyword, fileDate, startDateTime, actualEndDate))
@@ -141,12 +138,12 @@ namespace Alertnity.ArchiveDataAnalysis
 
                                             // See if records is having no or invalid  coordinates
                                             var records = csv.GetRecords<CrimeRecord>()
-                                                             .Where(r => r.Latitude != 0.0 && r.Longitude != 0.0);
+                                                             .Where(r => r.Latitude != Constants.INVALID_VALUE && r.Longitude != Constants.INVALID_VALUE);
 
                                             foreach (var record in records)
                                             {
                                                 double distance = GeoCalculator.HaversineDistance(Latitude, Longitude, record.Latitude, record.Longitude);
-                                                if (distance <= radiusMeters)
+                                                if (distance <= Constants.RADIUS_METERS)
                                                 {
                                                     outputRecords.Add(record);
                                                     Console.WriteLine(distance);
@@ -177,5 +174,5 @@ namespace Alertnity.ArchiveDataAnalysis
         }
 
     }
-   
+
 }

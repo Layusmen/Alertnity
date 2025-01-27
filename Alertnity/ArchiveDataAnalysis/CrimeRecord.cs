@@ -47,7 +47,7 @@ namespace Alertnity.ArchiveDataAnalysis
             // for empty field return 0.0/default value)
             if (string.IsNullOrWhiteSpace(text))
             {
-                return 0.0;
+                return Constants.INVALID_VALUE;
             }
 
             // convert the text to double
