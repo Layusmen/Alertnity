@@ -42,14 +42,14 @@ namespace Alertnity.ArchiveDataAnalysis
     }
     public class SafeDoubleConverter : DoubleConverter
     {
-        public override object ConvertFromString(string text, IReaderRow row, MemberMapData memberMapData)
+        public override object ConvertFromString(string? text, IReaderRow row, MemberMapData memberMapData)
         {
             // for empty field return 0.0/default value)
             if (string.IsNullOrWhiteSpace(text))
             {
                 return Constants.INVALID_VALUE;
             }
-
+            
             // convert the text to double
             return base.ConvertFromString(text, row, memberMapData);
         }
