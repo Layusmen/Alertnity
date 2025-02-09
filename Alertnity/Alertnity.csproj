@@ -13,6 +13,7 @@
     <PackageReference Include="Blazorise.LoadingIndicator" Version="1.6.1" />
     <PackageReference Include="Chart.js" Version="3.7.1" />
     <PackageReference Include="CsvHelper" Version="33.0.1" />
+    <PackageReference Include="dotenv.net" Version="3.2.1" />
     <PackageReference Include="Microsoft.Data.Analysis" Version="0.21.1" />
     <PackageReference Include="Quick.AspNetCore.Components.Web.Extensions" Version="6.0.2" />
   </ItemGroup>

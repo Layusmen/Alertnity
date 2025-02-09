@@ -17,9 +17,7 @@
 @using Services;
 @inject ProtectedSessionStorage ProtectedSessionStorage;
 @inject CrimeCountingServices crimeCountingServices;
-<PageTitle>
-    Comtity - UK's Community Security Watch and Crime Monitoring Platform
-</PageTitle>
+
 <div class="pb-5 pt-5" style="background-color:  #faf9f6;">
     <div class="container mt-2 d-flex align-items-center justify-content-center">
         <Image Source="bootstrap/Images/comtitynew.png" Text="Comtity" />
@@ -235,7 +233,9 @@
             // AzureMap Authentication
             authOptions: {
                 authType: 'subscriptionKey',
-                  subscriptionKey: '8Hh7Y9qJ2GatiD5SvzVctX833erIgDgCoahobEdZclBRlDxCxTN2JQQJ99BBACYeBjF6xdAlAAAgAZMP2oxN'
+                subscriptionKey: "@Environment.GetEnvironmentVariable("AZURE_MAPS_KEY")"
+
+                  //subscriptionKey: '8Hh7Y9qJ2GatiD5SvzVctX833erIgDgCoahobEdZclBRlDxCxTN2JQQJ99BBACYeBjF6xdAlAAAgAZMP2oxN'
                 //subscriptionKey: '3UzKDPLy12XBZ29RhdB9DVQo5lb3ewnSmvtgGzmPW4CaLBbL1Mi1JQQJ99AHACi5Ypz6xdAlAAAgAZMPfHOj'
             }
         });

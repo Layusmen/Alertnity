@@ -3,6 +3,7 @@ using Alertnity.Web.Services;
 using Blazorise;
 using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
+using dotenv.net;
 
 
 var builder = WebApplication.CreateBuilder(args);
@@ -36,6 +37,27 @@ if (!app.Environment.IsDevelopment())
     // The default HSTS value is 30 days. You may want to change this for production scenarios, see https://aka.ms/aspnetcore-hsts.
     app.UseHsts();
 }
+
+// Load environment variables from .env file
+DotEnv.Load();
+app.UseStaticFiles();
+// Store the Azure Maps key in configuration
+var azureMapsKey = Environment.GetEnvironmentVariable("AZURE_MAPS_KEY");
+
+// Make sure it's being loaded
+
+if (string.IsNullOrEmpty(azureMapsKey))
+{
+    Console.WriteLine("Azure Maps Key is NOT being loaded!");
+}
+else
+{
+    Console.WriteLine($"Azure Maps Key Loaded: {azureMapsKey}");
+}
+
+//Console.WriteLine($"Azure Maps Key Loaded: {azureMapsKey}");
+
+
 
 app.UseHttpsRedirection();
 
