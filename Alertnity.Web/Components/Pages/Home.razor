@@ -108,6 +108,7 @@
             {
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(appState.formInfo.Postcode);
                 string directoryPath = @"C:\Users\ola\Desktop\Police";
+
                 appState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
 
