@@ -52,7 +52,7 @@
     </div>
 </div>
 <LoadingIndicator @ref="loadingIndicator">
-    
+
     <!-- Crime Map Display -->
     @if (appState.showMap)
     {
@@ -107,8 +107,9 @@
             else
             {
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(appState.formInfo.Postcode);
-                string directoryPath = @"C:\Users\ola\Desktop\Police";
-
+                string directoryPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Police");
+                directoryPath = Path.GetFullPath(directoryPath);
+                
                 appState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
 
