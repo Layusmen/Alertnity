@@ -43,7 +43,7 @@ DotEnv.Load();
 app.UseStaticFiles();
 
 // Store the Azure Maps key in configuration
-var azureMapKey = Environment.GetEnvironmentVariable("AZURE_MAPS_KEY");
+var azureMapKey = Environment.GetEnvironmentVariable("AZURE_MAP_KEY");
 
 // Make sure it's being loaded
 if (string.IsNullOrEmpty(azureMapKey))
