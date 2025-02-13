@@ -41,30 +41,25 @@ if (!app.Environment.IsDevelopment())
 // Load environment variables from .env file
 DotEnv.Load();
 app.UseStaticFiles();
+
 // Store the Azure Maps key in configuration
-var azureMapsKey = Environment.GetEnvironmentVariable("AZURE_MAPS_KEY");
+var azureMapKey = Environment.GetEnvironmentVariable("AZURE_MAPS_KEY");
 
 // Make sure it's being loaded
-
-if (string.IsNullOrEmpty(azureMapsKey))
+if (string.IsNullOrEmpty(azureMapKey))
 {
     Console.WriteLine("Azure Maps Key is NOT being loaded!");
 }
 else
 {
-    Console.WriteLine($"Azure Maps Key Loaded: {azureMapsKey}");
+    Console.WriteLine($"Azure Maps Key Loaded: {azureMapKey}");
 }
 
-//Console.WriteLine($"Azure Maps Key Loaded: {azureMapsKey}");
-
-
+//Console.WriteLine($"Azure Maps Key Loaded: {azureMapKey}");
 
 app.UseHttpsRedirection();
-
 app.UseStaticFiles();
 app.UseAntiforgery();
-
 app.MapRazorComponents<App>()
     .AddInteractiveServerRenderMode();
-
 app.Run();
