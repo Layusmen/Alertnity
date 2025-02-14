@@ -1,5 +1,4 @@
 ﻿@page "/"
-
 @using Alertnity;
 @using Alertnity.ArchiveDataAnalysis;
 @using Alertnity.PoliceApi;
@@ -56,27 +55,27 @@
     <!-- Crime Map Display -->
     @if (appState.showMap)
     {
-        <CrimeMap />
+                <CrimeMap />
     }
     @if (appState.crimeResults != null && appState.crimeResults.Any())
     {
-        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
-        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
+                <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+                <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-        <StreetCountTable streetCounts="@appState.streetCounts" />
-        <StreetCountChart streetCounts="@appState.streetCounts" />
+                <StreetCountTable streetCounts="@appState.streetCounts" />
+                <StreetCountChart streetCounts="@appState.streetCounts" />
 
-        <CrimeRecordTable results="@appState.crimeResults" FormInfo="@appState.formInfo" />
+                <CrimeRecordTable results="@appState.crimeResults" FormInfo="@appState.formInfo" />
     }
     else if (appState.archiveDataResult != null && appState.archiveDataResult.Any())
     {
-        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
-        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
+                <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+                <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-        <StreetCountTable streetCounts="@appState.streetCounts" />
-        <StreetCountChart streetCounts="@appState.streetCounts" />
+                <StreetCountTable streetCounts="@appState.streetCounts" />
+                <StreetCountChart streetCounts="@appState.streetCounts" />
 
-        <CrimeRecordTable archiveDataResult="@appState.archiveDataResult" FormInfo="@appState.formInfo" />
+                <CrimeRecordTable archiveDataResult="@appState.archiveDataResult" FormInfo="@appState.formInfo" />
     }
     else
     {
@@ -233,7 +232,7 @@
             // AzureMap Authentication
             authOptions: {
                 authType: 'subscriptionKey',
-                subscriptionKey: "@Environment.GetEnvironmentVariable("AZURE_MAPS_KEY")"
+                subscriptionKey: "@Environment.GetEnvironmentVariable("AZURE_MAP_KEY")"
             }
         });
 

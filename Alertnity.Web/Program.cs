@@ -5,7 +5,6 @@ using Blazorise.Bootstrap5;
 using Blazorise.Icons.FontAwesome;
 using dotenv.net;
 
-
 var builder = WebApplication.CreateBuilder(args);
 
 //AppState registering
