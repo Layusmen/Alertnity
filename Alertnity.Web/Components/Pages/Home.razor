@@ -108,6 +108,7 @@
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(appState.formInfo.Postcode);
                 string directoryPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Police");
                 directoryPath = Path.GetFullPath(directoryPath);
+                
                 appState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
 
@@ -203,6 +204,7 @@
         return new List<object>();
     }
 }
+
 <script>
     window.getMap = function (crimeData) {
         if (!crimeData || crimeData.length === 0) {
@@ -232,7 +234,7 @@
             // AzureMap Authentication
             authOptions: {
                 authType: 'subscriptionKey',
-                subscriptionKey: "@Environment.GetEnvironmentVariable("AZURE_MAP_KEY")"
+                subscriptionKey: "@Environment.GetEnvironmentVariable("AZURE_MAPS_KEY")"
             }
         });
 
