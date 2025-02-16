@@ -1,6 +1,0 @@
-services:
-  alertnity.web:
-    image: ${DOCKER_REGISTRY-}alertnityweb
-    build:
-      context: .
-      dockerfile: Alertnity.Web/Dockerfile

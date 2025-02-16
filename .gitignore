@@ -366,6 +366,6 @@ FodyWeavers.xsd
 .env
 
 #Hide Police Folder
-.Police/
+Police/
 P o l i c e / 
-/Alertnity.Web/Police/
+
