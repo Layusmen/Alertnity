@@ -192,10 +192,10 @@ Welcome to **Alertnity**, the comprehensive platform designed to empower residen
 ## APIs and Integrations
 
 - **[Police API](https://data.police.uk/docs/api-call-limits/)**: For accessing crime reports and police updates.
-- **[Google Maps API](https://developers.google.com/maps/documentation)**: For geolocation and mapping.
+- **[Azure Maps API](https://azure.microsoft.com/en-us/products/azure-maps)**: For geolocation and mapping.
+- - **[Postcode API](https://postcodes.io/docs)**: For postcode API.
 - **[UK Population API](https://www.nomisweb.co.uk/api/v01/help)**: For demographic data.
-- **[Ordinance Postcode API](https://www.api.gov.uk/nd/ordnance-survey-places-api/#ordnance-survey-places-api)**: For postcode data.
-- **[Postcode API](https://postcodes.io/docs)**: For postcode API.
+
 
 
 ---
