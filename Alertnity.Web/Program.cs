@@ -10,6 +10,7 @@ var builder = WebApplication.CreateBuilder(args);
 //AppState registering
 //builder.Services.AddSingleton<AppState>();
 builder.Services.AddScoped<AppState>();
+
 //CrimeCountingServices registering
 builder.Services.AddScoped<CrimeCountingServices>();
 
