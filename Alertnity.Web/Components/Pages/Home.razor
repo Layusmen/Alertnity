@@ -53,27 +53,27 @@
     <!-- Crime Map Display -->
     @if (appState.showMap)
     {
-                <CrimeMap />
+        <CrimeMap />
     }
     @if (appState.crimeResults != null && appState.crimeResults.Any())
     {
-                <CategoryCountTable categoryCounts="@appState.categoryCounts" />
-                <CategoryCountChart categoryCounts="@appState.categoryCounts" />
+        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-                <StreetCountTable streetCounts="@appState.streetCounts" />
-                <StreetCountChart streetCounts="@appState.streetCounts" />
+        <StreetCountTable streetCounts="@appState.streetCounts" />
+        <StreetCountChart streetCounts="@appState.streetCounts" />
 
-                <CrimeRecordTable results="@appState.crimeResults" FormInfo="@appState.formInfo" />
+        <CrimeRecordTable results="@appState.crimeResults" FormInfo="@appState.formInfo" />
     }
     else if (appState.archiveDataResult != null && appState.archiveDataResult.Any())
     {
-                <CategoryCountTable categoryCounts="@appState.categoryCounts" />
-                <CategoryCountChart categoryCounts="@appState.categoryCounts" />
+        <CategoryCountTable categoryCounts="@appState.categoryCounts" />
+        <CategoryCountChart categoryCounts="@appState.categoryCounts" />
 
-                <StreetCountTable streetCounts="@appState.streetCounts" />
-                <StreetCountChart streetCounts="@appState.streetCounts" />
+        <StreetCountTable streetCounts="@appState.streetCounts" />
+        <StreetCountChart streetCounts="@appState.streetCounts" />
 
-                <CrimeRecordTable archiveDataResult="@appState.archiveDataResult" FormInfo="@appState.formInfo" />
+        <CrimeRecordTable archiveDataResult="@appState.archiveDataResult" FormInfo="@appState.formInfo" />
     }
     else
     {
@@ -104,9 +104,16 @@
             else
             {
                 PostcodeConverter converter = ArchiveCrimeByRadius.GetPostcodeForArchiveData(appState.formInfo.Postcode);
-                string directoryPath = Path.Combine(AppContext.BaseDirectory, "..", "..", "..", "Police");
-                directoryPath = Path.GetFullPath(directoryPath);
-                
+
+                string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+                string directoryLink = Path.Combine(desktopPath, "Police");
+
+
+
+                string directoryPath = Path.GetFullPath(directoryLink);
+                Console.WriteLine(directoryPath);
+
+
                 appState.archiveDataResult = ArchiveCrimeByRadius.ProcessDirectory(converter, directoryPath, startDate ?? DateTime.MinValue, endDate ?? DateTime.MinValue);
             }
 

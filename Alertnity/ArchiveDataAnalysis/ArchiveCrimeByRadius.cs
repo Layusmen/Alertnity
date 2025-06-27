@@ -101,6 +101,7 @@ namespace Alertnity.ArchiveDataAnalysis
             int month = startDateTime.Month;
             int lastDay = DateTime.DaysInMonth(year, month);
             DateTime actualEndDate = endDateTime ?? new DateTime(year, month, lastDay);
+
             List<CrimeRecord> outputRecords = new();
             try
             {

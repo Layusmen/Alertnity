@@ -13,7 +13,7 @@ using System.Linq;
 using Microsoft.Data.Analysis;
 using Alertnity.ArchiveDataAnalysis;
 using System.Data;
-
+using System.IO;
 
 namespace Alertnity
 {
@@ -21,7 +21,18 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
-            
+            string desktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
+            string directoryLink = Path.Combine(desktopPath, "Police");
+
+            Console.WriteLine(directoryLink);
+
+            string[] directoryFolders = Directory.GetDirectories(directoryLink, "**", SearchOption.AllDirectories);
+
+            foreach (string folder in directoryFolders)
+            {
+                Console.WriteLine(folder);
+            }
+            Console.ReadLine();
         }
 
     }
