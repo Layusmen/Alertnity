@@ -13,7 +13,8 @@ using System.Linq;
 using Microsoft.Data.Analysis;
 using Alertnity.ArchiveDataAnalysis;
 using System.Data;
-using System.IO;
+using Blazorise;
+using CsvHelper.Configuration;
 
 namespace Alertnity
 {
@@ -28,10 +29,37 @@ namespace Alertnity
 
             string[] directoryFolders = Directory.GetDirectories(directoryLink, "**", SearchOption.AllDirectories);
 
+            List<CrimeRecord> csvFileContent = new();
+
             foreach (string folder in directoryFolders)
             {
                 Console.WriteLine(folder);
+                string[] csvFiles = Directory.GetFiles(folder, "*.csv");
+
+                foreach(string csvFile in csvFiles)
+                {
+
+                    Console.WriteLine(csvFile);
+                    using var reader = new StreamReader(csvFile);
+                    var config = new CsvConfiguration(CultureInfo.InvariantCulture)
+                    {
+                        HeaderValidated = null,
+                         MissingFieldFound = null,
+                    };
+                    using var csv = new CsvReader(reader, config);
+                    var records = csv.GetRecords<CrimeRecord>();
+
+                    foreach (var record in records)
+                    {
+                        Console.WriteLine( record.month + " " + record.Latitude + " " + record.Latitude);
+
+                        csvFileContent.Add(record);
+                    }
+                }
             }
+
+            
+
             Console.ReadLine();
         }
 
