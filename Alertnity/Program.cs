@@ -22,7 +22,7 @@ namespace Alertnity
     {
         static void Main(string[] args)
         {
-            
+            List<CrimeRecord> crimeRecords = CsvFilesHandling.csvFileRecords();
         }
 
     }
