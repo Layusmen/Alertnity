@@ -48,9 +48,6 @@ namespace Alertnity.ArchiveDataAnalysis
                     }
                 }
             }
-
-
-            Console.ReadLine();
             return csvFileContent;
 
         }
